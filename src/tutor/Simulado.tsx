@@ -12,6 +12,7 @@ import {
   type Simulado as SimuladoSalvo,
 } from './artefatosApi';
 import { corrigirSimulado, percentual, type Correcao } from './simuladoUtils';
+import CarregandoIA from '../components/CarregandoIA';
 
 const NIVEIS = ['fácil', 'médio', 'difícil'];
 const LETRAS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -337,7 +338,7 @@ export default function Simulado({ abrirId }: { abrirId?: string | null } = {}) 
       <section aria-label="Seus simulados" className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Seus simulados</h2>
         {carregando ? (
-          <p className="text-sm text-slate-600 dark:text-slate-400">Carregando…</p>
+          <CarregandoIA texto="Carregando…" />
         ) : simulados.length === 0 ? (
           <p className="text-sm text-slate-600 dark:text-slate-400">Nenhum simulado ainda. Gere o primeiro acima.</p>
         ) : (

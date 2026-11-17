@@ -13,6 +13,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
     "border-beam": "^1.4.1",
+    "bot-avatars": "^0.2.2",
     "img-fx": "^0.5.1",
     "liquid-gooey": "^0.2.2",
     "lucide-react": "^0.468.0",
@@ -21,7 +22,9 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.9.0",
     "thinking-orbs": "^0.3.2",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "voice-glow": "^0.3.0",
+    "voice-ring": "^0.2.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

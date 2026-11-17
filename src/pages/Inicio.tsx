@@ -16,6 +16,8 @@ import {
 import { Logo } from './Layout';
 import { BorderBeam } from 'border-beam';
 import { Liquid } from 'liquid-gooey';
+import { MetalText } from 'metal-fx';
+import { ImageGeneration } from 'img-fx';
 
 const LINKS = [
   { href: '#recursos', label: 'Recursos' },
@@ -183,25 +185,25 @@ export default function Inicio() {
                 vence hoje, o que vem depois e o que a escola avisou.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
-                  to="/entrar?modo=criar"
-                  className="inline-flex items-center gap-2 rounded-xl bg-azul px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-azul/20 transition-colors hover:bg-indigo-800"
-                >
-                  Criar conta de aluno
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-                <Liquid blur={6} contrast={18} fill="transparent">
-                  <Liquid.Item>
-                    <Link
-                      to="/entrar"
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-marinho transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
-                    >
-                      Já tenho conta
-                    </Link>
-                  </Liquid.Item>
-                </Liquid>
-              </div>
+              <Liquid blur={6} contrast={18} fill="transparent" className="mt-8 flex flex-wrap items-center gap-3">
+                <Liquid.Item>
+                  <Link
+                    to="/entrar?modo=criar"
+                    className="inline-flex items-center gap-2 rounded-xl bg-azul px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-azul/20 transition-colors hover:bg-indigo-800"
+                  >
+                    Criar conta de aluno
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </Liquid.Item>
+                <Liquid.Item>
+                  <Link
+                    to="/entrar"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-marinho transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
+                  >
+                    Já tenho conta
+                  </Link>
+                </Liquid.Item>
+              </Liquid>
 
               <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">
                 Leva menos de um minuto. Você só precisa de um nick e da sua turma.
@@ -241,7 +243,8 @@ export default function Inicio() {
             />
 
             <div className="mt-12 grid gap-4 md:grid-cols-3">
-              <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900 md:col-span-2 md:p-8">
+              <BorderBeam className="rounded-2xl md:col-span-2" colorVariant="ocean" theme="auto">
+                <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900 md:p-8">
                 <Icone>
                   <Clock className="size-5" aria-hidden="true" />
                 </Icone>
@@ -275,6 +278,7 @@ export default function Inicio() {
                   ))}
                 </div>
               </article>
+              </BorderBeam>
 
               <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
                 <Icone>
@@ -419,15 +423,30 @@ export default function Inicio() {
 
             <div className="justify-self-center">
               <div className="rounded-[2rem] border border-white/15 bg-white/5 p-3 shadow-2xl backdrop-blur-sm">
-                <img
-                  src="/logo.png"
-                  alt="Logo do As Aulas: prédio da escola com relógio e bandeira verde"
-                  width={256}
-                  height={256}
-                  className="size-52 rounded-[1.5rem] object-cover sm:size-60"
-                />
+                <ImageGeneration
+                  preset="pixels-organic"
+                  images="/logo.png"
+                  autoReveal
+                  theme="auto"
+                  strength={0.75}
+                  revealHoldMs={7000}
+                  revealDelayRange={[9, 13]}
+                  className="rounded-[1.5rem]"
+                >
+                  <img
+                    src="/logo.png"
+                    alt="Logo do As Aulas: prédio da escola com relógio e bandeira verde"
+                    width={256}
+                    height={256}
+                    className="size-52 rounded-[1.5rem] object-cover sm:size-60"
+                  />
+                </ImageGeneration>
               </div>
-              <p className="mt-4 text-center font-display text-lg font-semibold text-white">As Aulas</p>
+              <div className="mt-4 flex justify-center">
+                <MetalText font="600 18px/1.2 'Bricolage Grotesque', Inter, sans-serif" color="#ffffff" theme="dark">
+                  As Aulas
+                </MetalText>
+              </div>
               <p className="text-center text-sm text-slate-400">Tudo da escola em um só lugar.</p>
             </div>
           </div>

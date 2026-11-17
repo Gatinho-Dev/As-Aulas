@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Copy, Plus, Send } from 'lucide-react';
 import { ThinkingOrb } from 'thinking-orbs';
+import { BotAvatar } from 'bot-avatars';
+import { VoiceRing } from 'voice-ring';
+import { VoiceBeam } from 'voice-glow';
+import { BorderBeam } from 'border-beam';
 import { supabase } from '../lib/supabase';
 import { chamarTutor, type Mensagem } from './tutorApi';
 import Markdown from './Markdown';
@@ -195,11 +199,16 @@ export default function ChatTutor({ perguntaInicial }: { perguntaInicial?: strin
         </ul>
       </aside>
 
+      <BorderBeam className="rounded-xl" colorVariant="ocean" theme="auto">
       <section aria-label="Conversa" className="flex min-h-[28rem] flex-col rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {mensagens.length === 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <div className="relative grid place-items-center py-2">
+                <VoiceRing size={112} state="idle" theme="light" aria-label="Tutor IA em espera" />
+                <BotAvatar type="clover" size={56} state="default" className="absolute" />
+              </div>
+              <p className="text-center text-sm text-slate-600 dark:text-slate-400">
                 O que você quer estudar hoje? Envie sua dúvida abaixo ou comece por uma sugestão.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -247,6 +256,7 @@ export default function ChatTutor({ perguntaInicial }: { perguntaInicial?: strin
 
         {erro && <p role="alert" className="mx-4 mb-2 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{erro}</p>}
 
+        <VoiceBeam type="default" theme="light" look="glow" level={0.16} colorVariant="ocean">
         <form onSubmit={enviar} className="flex items-end gap-2 border-t border-slate-200 p-3 dark:border-slate-800">
           <label htmlFor="mensagem-tutor" className="sr-only">Sua pergunta</label>
           <textarea
@@ -267,7 +277,9 @@ export default function ChatTutor({ perguntaInicial }: { perguntaInicial?: strin
             <Send className="size-4" aria-hidden /> Enviar
           </button>
         </form>
+        </VoiceBeam>
       </section>
+      </BorderBeam>
     </div>
   );
 }

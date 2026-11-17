@@ -13,6 +13,7 @@ import {
   type PedidoEstudo,
   type StatusCartao,
 } from './artefatosApi';
+import CarregandoIA from '../components/CarregandoIA';
 
 const NIVEIS = ['fácil', 'médio', 'difícil'];
 
@@ -325,7 +326,7 @@ export default function Flashcards({ abrirId }: { abrirId?: string | null } = {}
       <section aria-label="Suas coleções" className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Suas coleções</h2>
         {carregando ? (
-          <p className="text-sm text-slate-600 dark:text-slate-400">Carregando…</p>
+          <CarregandoIA texto="Carregando…" />
         ) : decks.length === 0 ? (
           <p className="text-sm text-slate-600 dark:text-slate-400">
             Nenhuma coleção ainda. Gere a primeira com o formulário acima.

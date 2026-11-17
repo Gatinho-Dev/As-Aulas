@@ -8,6 +8,7 @@ import {
   type PedidoEstudo,
   type Plano as PlanoSalvo,
 } from './artefatosApi';
+import CarregandoIA from '../components/CarregandoIA';
 
 const NIVEIS = ['fácil', 'médio', 'difícil'];
 
@@ -208,7 +209,7 @@ export default function PlanoEstudos({ abrirId }: { abrirId?: string | null }) {
       <section aria-label="Meus planos" className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Meus planos</h2>
         {carregando ? (
-          <p className="text-sm text-slate-600 dark:text-slate-400">Carregando…</p>
+          <CarregandoIA texto="Carregando…" />
         ) : planos.length === 0 ? (
           <p className="text-sm text-slate-600 dark:text-slate-400">Nenhum plano ainda. Gere o primeiro acima.</p>
         ) : (

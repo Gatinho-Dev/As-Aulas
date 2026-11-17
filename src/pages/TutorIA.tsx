@@ -11,6 +11,8 @@ import {
   MessageCircle,
   Sparkles,
 } from 'lucide-react';
+import { BotAvatar } from 'bot-avatars';
+import { BorderBeam } from 'border-beam';
 import ChatTutor from '../tutor/ChatTutor';
 import ExplicarMateria from '../tutor/ExplicarMateria';
 import Flashcards from '../tutor/Flashcards';
@@ -101,6 +103,7 @@ function Inicio({ onIr, onPerguntar }: { onIr: (aba: Aba) => void; onPerguntar: 
 
   return (
     <div className="space-y-6">
+      <BorderBeam className="rounded-2xl" colorVariant="ocean" theme="auto">
       <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-6 dark:border-indigo-900 dark:from-indigo-950 dark:to-slate-900">
         <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
           <Sparkles className="size-4" aria-hidden /> Tutor IA
@@ -143,6 +146,7 @@ function Inicio({ onIr, onPerguntar }: { onIr: (aba: Aba) => void; onPerguntar: 
           ))}
         </div>
       </section>
+      </BorderBeam>
 
       {visao && (
         <section aria-label="Seu uso do Tutor IA" className="space-y-2">
@@ -214,6 +218,7 @@ export default function TutorIA() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="flex items-center gap-3">
+        <BotAvatar type="clover" size={44} state="default" aria-hidden />
         <GraduationCap className="size-7 text-indigo-700 dark:text-indigo-300" aria-hidden />
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tutor IA</h1>

@@ -9,6 +9,7 @@ import {
   type Material,
   type TipoMaterial,
 } from './artefatosApi';
+import CarregandoIA from '../components/CarregandoIA';
 
 const FILTROS: { id: 'todos' | TipoMaterial; label: string }[] = [
   { id: 'todos', label: 'Todos' },
@@ -105,7 +106,7 @@ export default function MeusMateriais({
       {erro && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{erro}</p>}
 
       {carregando ? (
-        <p className="text-sm text-slate-600 dark:text-slate-400">Carregando seus materiais…</p>
+        <CarregandoIA texto="Carregando seus materiais…" />
       ) : visiveis.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
           Nada salvo aqui ainda. Use as ferramentas do Tutor IA para gerar flashcards, simulados, resumos e planos.

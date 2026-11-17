@@ -1,6 +1,7 @@
 import { useEffect, useState, type ComponentType, type FormEvent } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, BookOpen, CalendarDays, CircleHelp, Clock, ClipboardCheck, GraduationCap, Trophy, TrendingUp, FolderKanban, LayoutDashboard, Library, LogOut, Megaphone, Moon, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Search, Settings, SlidersHorizontal, Sun, Users } from 'lucide-react';
+import { ThinkingOrb } from 'thinking-orbs';
 import { useAuth } from '../auth/AuthContext';
 import Tutorial from '../tutorial/Tutorial';
 import { chaveSessaoTutorial } from '../tutorial/passos';
@@ -121,7 +122,8 @@ export default function Layout() {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-slate-500" role="status">
+      <div className="flex min-h-dvh items-center justify-center gap-3 text-slate-500" role="status">
+        <ThinkingOrb state="connecting" size={32} />
         Carregando…
       </div>
     );

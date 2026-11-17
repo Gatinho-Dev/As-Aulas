@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { NICK_REGEX, useAuth } from '../auth/AuthContext';
 import { supabase } from '../lib/supabase';
+import { ThinkingOrb } from 'thinking-orbs';
+import { BorderBeam } from 'border-beam';
 import { Logo } from './Layout';
 
 type SignupClass = {
@@ -55,7 +57,8 @@ export default function Login() {
   // Enquanto o Supabase troca o ?code= do Google pela sessão, não mostra o formulário.
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-slate-500" role="status">
+      <div className="flex min-h-dvh items-center justify-center gap-3 text-slate-500" role="status">
+        <ThinkingOrb state="connecting" size={32} />
         Carregando…
       </div>
     );
@@ -135,7 +138,8 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="flex-1 rounded-t-3xl bg-white px-6 pb-10 pt-8 shadow-2xl dark:bg-slate-900 md:rounded-none md:p-10 md:shadow-none">
+        <BorderBeam className="flex-1 rounded-t-3xl md:rounded-none" colorVariant="ocean" theme="auto">
+        <div className="h-full rounded-t-3xl bg-white px-6 pb-10 pt-8 shadow-2xl dark:bg-slate-900 md:rounded-none md:p-10 md:shadow-none">
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             {mode === 'entrar' ? 'Entrar' : 'Criar conta de aluno'}
           </h2>
@@ -304,6 +308,7 @@ export default function Login() {
             {mode === 'entrar' ? 'Não tem conta? Criar conta' : 'Já tem conta? Entrar'}
           </button>
         </div>
+        </BorderBeam>
       </div>
     </main>
   );
