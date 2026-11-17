@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Logo } from './Layout';
 import { BorderBeam } from 'border-beam';
-import { MetalFx } from 'metal-fx';
 import { Liquid } from 'liquid-gooey';
 
 const LINKS = [
@@ -185,15 +184,13 @@ export default function Inicio() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <MetalFx variant="button" preset="silver" theme="light">
-                  <Link
-                    to="/entrar?modo=criar"
-                    className="inline-flex items-center gap-2 rounded-xl bg-azul px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-azul/20 transition-colors hover:bg-indigo-800"
-                  >
-                    Criar conta de aluno
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </MetalFx>
+                <Link
+                  to="/entrar?modo=criar"
+                  className="inline-flex items-center gap-2 rounded-xl bg-azul px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-azul/20 transition-colors hover:bg-indigo-800"
+                >
+                  Criar conta de aluno
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
                 <Liquid blur={6} contrast={18} fill="transparent">
                   <Liquid.Item>
                     <Link

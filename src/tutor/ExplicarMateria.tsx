@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { MetalFx } from 'metal-fx';
 import { chamarTutor } from './tutorApi';
 import Markdown from './Markdown';
 
@@ -73,15 +72,13 @@ export default function ExplicarMateria() {
           Dúvida específica (opcional)
           <textarea className={campo} rows={2} value={duvida} onChange={(e) => setDuvida(e.target.value)} maxLength={300} />
         </label>
-        <MetalFx variant="button" preset="silver" theme="light" className="sm:col-span-2 sm:justify-self-start">
-          <button
-            type="submit"
-            disabled={carregando || !materia.trim() || !tema.trim()}
-            className="min-h-11 rounded-lg bg-indigo-700 px-4 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {carregando ? 'Gerando explicação…' : 'Explicar matéria'}
-          </button>
-        </MetalFx>
+        <button
+          type="submit"
+          disabled={carregando || !materia.trim() || !tema.trim()}
+          className="min-h-11 rounded-lg bg-indigo-700 px-4 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-2 sm:justify-self-start"
+        >
+          {carregando ? 'Gerando explicação…' : 'Explicar matéria'}
+        </button>
       </form>
 
       {erro && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{erro}</p>}
