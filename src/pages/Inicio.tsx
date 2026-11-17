@@ -17,7 +17,6 @@ import { Logo } from './Layout';
 import { BorderBeam } from 'border-beam';
 import { Liquid } from 'liquid-gooey';
 import { MetalText } from 'metal-fx';
-import { ImageGeneration } from 'img-fx';
 
 const LINKS = [
   { href: '#recursos', label: 'Recursos' },
@@ -423,24 +422,13 @@ export default function Inicio() {
 
             <div className="justify-self-center">
               <div className="rounded-[2rem] border border-white/15 bg-white/5 p-3 shadow-2xl backdrop-blur-sm">
-                <ImageGeneration
-                  preset="pixels-organic"
-                  images="/logo.png"
-                  autoReveal
-                  theme="auto"
-                  strength={0.75}
-                  revealHoldMs={7000}
-                  revealDelayRange={[9, 13]}
-                  className="rounded-[1.5rem]"
-                >
-                  <img
-                    src="/logo.png"
-                    alt="Logo do As Aulas: prédio da escola com relógio e bandeira verde"
-                    width={256}
-                    height={256}
-                    className="size-52 rounded-[1.5rem] object-cover sm:size-60"
-                  />
-                </ImageGeneration>
+                <img
+                  src="/logo.png"
+                  alt="Logo do As Aulas: prédio da escola com relógio e bandeira verde"
+                  width={256}
+                  height={256}
+                  className="size-52 rounded-[1.5rem] object-cover sm:size-60"
+                />
               </div>
               <div className="mt-4 flex justify-center">
                 <MetalText font="600 18px/1.2 'Bricolage Grotesque', Inter, sans-serif" color="#ffffff" theme="dark">
