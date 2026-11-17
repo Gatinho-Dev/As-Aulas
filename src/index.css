@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Paleta As Aulas: os tons indigo usados nas telas passam a seguir a identidade da marca. */
+@theme {
+  --color-indigo-100: #eaf0ff;
+  --color-indigo-200: #c9d7fb;
+  --color-indigo-700: #3563e9;
+  --color-indigo-800: #2a4fc2;
+  --color-indigo-900: #14213d;
+  --color-indigo-950: #0f1a31;
+
+  /* Paleta da marca usada na página inicial */
+  --color-marinho: #14213d;
+  --color-azul: #3563e9;
+  --color-azul-claro: #eaf0ff;
+  --color-fundo: #f7f8fc;
+  --color-tinta: #202a3b;
+  --color-tinta-suave: #737e93;
+  --color-verde: #16a36a;
+  --color-laranja: #f59e0b;
+  --color-vermelho: #e5484d;
+
+  --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Textura de papel quadriculado: o caderno da escola, bem discreto. */
+.fundo-quadriculado {
+  --grade-cor: rgba(20, 33, 61, 0.07);
+  background-image:
+    linear-gradient(to right, var(--grade-cor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grade-cor) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 30%, transparent 80%);
+}
+
+.dark .fundo-quadriculado {
+  --grade-cor: rgba(255, 255, 255, 0.055);
+}
+
+.fundo-quadriculado-escuro {
+  --grade-cor: rgba(255, 255, 255, 0.07);
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 25%, transparent 78%);
+}
+
+@keyframes varredura {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(260%);
+  }
+}
+
+@keyframes entrada-subir {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.entrada {
+  animation: entrada-subir 0.7s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+}
+
+.entrada-2 {
+  animation-delay: 0.1s;
+}
+
+.entrada-3 {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada {
+    animation: none;
+  }
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+}
+
+:focus-visible {
+  outline: 2px solid #3563e9;
+  outline-offset: 2px;
+}
