@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Copy, Plus, Send } from 'lucide-react';
+import { ThinkingOrb } from 'thinking-orbs';
 import { supabase } from '../lib/supabase';
 import { chamarTutor, type Mensagem } from './tutorApi';
 import Markdown from './Markdown';
@@ -235,7 +236,12 @@ export default function ChatTutor({ perguntaInicial }: { perguntaInicial?: strin
               )}
             </div>
           ))}
-          {enviando && <p role="status" className="text-sm text-slate-500">O Tutor está pensando…</p>}
+          {enviando && (
+            <div role="status" className="flex items-center gap-2 text-sm text-slate-500">
+              <ThinkingOrb state="working" size={32} />
+              <span>O Tutor está pensando…</span>
+            </div>
+          )}
           <div ref={fimRef} />
         </div>
 

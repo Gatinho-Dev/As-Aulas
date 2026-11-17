@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ThinkingOrb } from 'thinking-orbs';
+import { BorderBeam } from 'border-beam';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
 import AutorConteudo from '../components/AutorConteudo';
@@ -405,11 +406,13 @@ function ItemAtividade({
 
 function Stat({ label, value, hint, tone }: { label: string; value: number | string; hint?: string; tone?: 'danger' }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <p className="text-sm text-slate-600 dark:text-slate-400">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${tone === 'danger' ? 'text-red-600' : ''}`}>{value}</p>
-      {hint && <p className="mt-1 truncate text-xs text-slate-500">{hint}</p>}
-    </div>
+    <BorderBeam className="rounded-xl" colorVariant="ocean" theme="auto">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <p className="text-sm text-slate-600 dark:text-slate-400">{label}</p>
+        <p className={`mt-1 text-2xl font-bold ${tone === 'danger' ? 'text-red-600' : ''}`}>{value}</p>
+        {hint && <p className="mt-1 truncate text-xs text-slate-500">{hint}</p>}
+      </div>
+    </BorderBeam>
   );
 }
 
