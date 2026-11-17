@@ -270,7 +270,7 @@ export default function Login() {
               onClick={handlePasskey}
               disabled={passkeyBusy || busy || googleBusy}
               aria-busy={passkeyBusy}
-              className="mt-4 w-full rounded-xl border border-indigo-200 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="mt-4 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-900 hover:bg-indigo-100 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               {passkeyBusy ? 'Aguardando passkey…' : 'Entrar com passkey'}
             </button>
