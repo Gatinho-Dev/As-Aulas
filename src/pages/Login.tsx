@@ -5,6 +5,12 @@ import { supabase } from '../lib/supabase';
 import { ThinkingOrb } from 'thinking-orbs';
 import { BorderBeam } from 'border-beam';
 import { Logo } from './Layout';
+import { ANOS_FUND2 } from './Turmas';
+
+function letraSala(nome: string): string {
+  const m = nome.match(/\b([A-D])\b\s*$/i);
+  return m ? m[1].toUpperCase() : nome.trim().slice(-1).toUpperCase();
+}
 
 type SignupClass = {
   id: string;
@@ -13,12 +19,7 @@ type SignupClass = {
   shift: string | null;
 };
 
-const shiftLabels: Record<string, string> = {
-  manha: 'Manhã',
-  tarde: 'Tarde',
-  noite: 'Noite',
-  integral: 'Integral',
-};
+
 
 export default function Login() {
   const { session, loading, signIn, signUp, signInWithGoogle } = useAuth();
@@ -86,8 +87,9 @@ export default function Login() {
     }
   }
 
-  const years = [...new Set(classes.map((c) => c.school_year))].sort((a, b) => a - b);
   const classesOfYear = classes.filter((c) => String(c.school_year) === year);
+  const idPorLetraLogin = new Map(classesOfYear.map((c) => [letraSala(c.name), c.id]));
+  const letraLogin = classesOfYear.find((c) => c.id === classId)?.name ? letraSala(classesOfYear.find((c) => c.id === classId)!.name) : '';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -209,42 +211,20 @@ export default function Login() {
 
             {mode === 'criar' && (
               <>
-                <Field id="ano" label="Ano">
-                  <select
-                    id="ano"
-                    className={inputClass}
-                    value={year}
-                    disabled={!years.length}
-                    onChange={(e) => {
-                      setYear(e.target.value);
-                      setClassId('');
-                    }}
-                  >
-                    <option value="">{years.length ? 'Selecione o ano' : 'Nenhuma turma disponível'}</option>
-                    {years.map((y) => (
-                      <option key={y} value={String(y)}>
-                        {y}º ano
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field id="sala" label="Sala">
-                  <select
-                    id="sala"
-                    className={inputClass}
-                    value={classId}
-                    disabled={!year}
-                    onChange={(e) => setClassId(e.target.value)}
-                  >
-                    <option value="">{year ? 'Selecione a sala' : 'Escolha o ano primeiro'}</option>
-                    {classesOfYear.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                        {c.shift && shiftLabels[c.shift] ? ` · ${shiftLabels[c.shift]}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                <div>
+                  <p className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">1. Ano — 6º ao 9º</p>
+                  <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+                    {ANOS_FUND2.map((y) => (<button key={y} type="button" onClick={() => { setYear(String(y)); setClassId(''); }} aria-pressed={year === String(y)} className={year === String(y) ? 'rounded-xl bg-indigo-700 px-2 py-2.5 font-semibold text-white' : 'rounded-xl border border-slate-300 px-2 py-2.5 font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'}>{y}º</button>))}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">2. Sala — A, B, C ou D</p>
+                  {!year ? (<p className="text-sm text-slate-500">Escolha o ano para ver as salas.</p>) : (
+                  <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha a sala">
+                    {['A','B','C','D'].map((letra) => { const id = idPorLetraLogin.get(letra); return (<button key={letra} type="button" disabled={!id} onClick={() => id && setClassId(id)} aria-pressed={letraLogin === letra} className={letraLogin === letra ? 'rounded-xl bg-indigo-700 px-2 py-2.5 text-lg font-bold text-white' : 'rounded-xl border border-slate-300 px-2 py-2.5 text-lg font-bold hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:hover:bg-slate-800'}>{letra}</button>); })}
+                  </div>
+                  )}
+                </div>
                 {classesError && (
                   <p role="alert" className="text-sm text-red-700 dark:text-red-300">
                     {classesError}

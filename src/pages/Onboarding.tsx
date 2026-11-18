@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { supabase } from '../lib/supabase';
-import { TURNO_LABEL, anoLabel } from './Turmas';
+import { ANOS_FUND2, anoLabel, letraDaTurma } from './Turmas';
 
 const NICK_REGEX = /^[A-Za-z0-9_.]{3,20}$/;
 
@@ -118,8 +118,9 @@ export default function Onboarding() {
     setVincs([turmaId]);
   }
 
-  const anos = [...new Set(turmas.map((t) => t.school_year))].sort((a, b) => a - b);
   const turmasDoAno = turmas.filter((t) => String(t.school_year) === ano);
+  const idPorLetra = new Map(turmasDoAno.map((t) => [letraDaTurma(t.name), t.id]));
+  const letraSel = (turmasDoAno.find((t) => t.id === turmaId)?.name ?? '').length ? letraDaTurma(turmasDoAno.find((t) => t.id === turmaId)!.name) : '';
 
   return (
     <section aria-labelledby="titulo-onboarding" className="mx-auto max-w-md space-y-6">
@@ -192,42 +193,24 @@ export default function Onboarding() {
               Você só vê lições, provas, avisos e horários da sua turma.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium">
-              Ano
-              <select
-                value={ano}
-                onChange={(e) => {
-                  setAno(e.target.value);
-                  setTurmaId('');
-                }}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
-              >
-                <option value="">Selecione o ano</option>
-                {anos.map((a) => (
-                  <option key={a} value={String(a)}>
-                    {anoLabel(a)}
-                  </option>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium">1. Escolha o ano</p>
+              <div className="mt-2 grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+                {ANOS_FUND2.map((a) => (
+                  <button key={a} type="button" onClick={() => { setAno(String(a)); setTurmaId(''); }} aria-pressed={ano === String(a)} className={ano === String(a) ? 'rounded-xl bg-indigo-700 px-2 py-3 font-semibold text-white' : 'rounded-xl border border-slate-300 px-2 py-3 font-semibold hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}>{a}º<span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span></button>
                 ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              Sala
-              <select
-                value={turmaId}
-                disabled={!ano}
-                onChange={(e) => setTurmaId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
-              >
-                <option value="">{ano ? 'Selecione a sala' : 'Escolha o ano primeiro'}</option>
-                {turmasDoAno.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                    {t.shift && TURNO_LABEL[t.shift] ? ` · ${TURNO_LABEL[t.shift]}` : ''}
-                  </option>
-                ))}
-              </select>
-            </label>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium">2. Escolha a sala</p>
+              {!ano ? (<p className="mt-2 text-sm text-slate-500">Escolha o ano para ver A, B, C e D.</p>) : (
+              <div className="mt-2 grid grid-cols-4 gap-2" role="group" aria-label="Escolha a sala">
+                {['A','B','C','D'].map((letra) => { const id = idPorLetra.get(letra); return (<button key={letra} type="button" disabled={!id} onClick={() => id && setTurmaId(id)} aria-pressed={letraSel === letra} className={letraSel === letra ? 'rounded-xl bg-indigo-700 px-2 py-3 text-lg font-bold text-white' : 'rounded-xl border border-slate-300 px-2 py-3 text-lg font-bold hover:bg-slate-100 disabled:opacity-40 dark:border-slate-700 dark:hover:bg-slate-800'}>{letra}</button>); })}
+              </div>
+              )}
+            </div>
+            {ano && turmaId && (<p className="text-sm text-slate-600 dark:text-slate-400">Selecionado: <strong>{turmasDoAno.find((t) => t.id === turmaId)?.name}</strong></p>)}
           </div>
 
           {erroTurma && (
