@@ -184,18 +184,37 @@ export default function Turmas() {
         ) : (
           <div>
             <h2 className="mb-2 font-semibold">2. Escolha a sala do {anoLabel(Number(anoSel))}</h2>
+            {mensagem && (
+              <div role="status" className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                <p>{mensagem}</p>
+                <p className="mt-2 flex flex-wrap gap-2">
+                  <Link to="/licoes" className="rounded-lg bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800">Ver lições dessa turma</Link>
+                  <Link to="/" className="rounded-lg border border-emerald-600 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900">Ir para o Início</Link>
+                </p>
+              </div>
+            )}
+            {erroAcao && (<p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{erroAcao}</p>)}
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {salasAdmin.map(({ letra, turma }) => (
-                <li key={letra} className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
+              {salasAdmin.map(({ letra, turma }) => {
+                const ehPrincipal = turma && turma.id === principalId;
+                const busy = turma ? salvandoId === turma.id : false;
+                return (
+                <li key={letra} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center ${ehPrincipal ? 'border-indigo-600 bg-indigo-700 text-white shadow-lg' : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'}`}>
                   <span className="text-3xl font-extrabold">{letra}</span>
-                  <span className="text-xs text-slate-500">{turma ? `${turma.name}${turma.shift ? ` · ${TURNO_LABEL[turma.shift] ?? turma.shift}` : ''}` : 'Sem turma'}</span>
-                  {turma ? (
-                    <Link to={`/turmas/${turma.id}`} className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800">Abrir turma</Link>
+                  <span className={`text-xs ${ehPrincipal ? 'text-indigo-100' : 'text-slate-500'}`}>{turma ? turma.name : 'Sem turma'}</span>
+                  {ehPrincipal ? (
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-indigo-800">✓ Definida — o site já mostra esta sala</span>
+                  ) : turma ? (
+                    <>
+                      <button type="button" disabled={busy} onClick={() => void entrarNaSala(turma.id, turma.name)} className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60">Definir turma</button>
+                      <Link to={`/turmas/${turma.id}`} className="text-xs font-medium text-slate-500 hover:underline">abrir detalhes</Link>
+                    </>
                   ) : (
                     <span className="text-xs text-slate-400">Indisponível</span>
                   )}
                 </li>
-              ))}
+                );
+              })}
             </ul>
             <button type="button" onClick={() => setAnoSel('')} className="mt-3 text-sm font-medium text-slate-500 hover:underline">← Voltar e escolher outro ano</button>
           </div>
