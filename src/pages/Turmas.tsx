@@ -23,7 +23,7 @@ export function anoLabel(ano: number): string {
 }
 
 export default function Turmas() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const userId = session?.user.id;
   const [turmas, setTurmas] = useState<Turma[] | null>(null);
   const [principal, setPrincipal] = useState<string | null>(null);
@@ -140,8 +140,23 @@ export default function Turmas() {
 
       {turmas.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
-          <p className="font-medium">Nenhuma turma foi cadastrada ainda.</p>
-          <p className="mt-1 text-sm text-slate-500">Quando você for associado a uma turma, ela aparecerá aqui.</p>
+          {profile?.role === 'admin' ? (
+            <>
+              <p className="font-medium">Nenhuma turma foi cadastrada ainda.</p>
+              <p className="mt-1 text-sm text-slate-500">Cadastre turmas na área de administração.</p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">Você ainda não está em nenhuma turma.</p>
+              <p className="mt-1 text-sm text-slate-500">Escolha a sua turma para ver o conteúdo dela.</p>
+              <Link
+                to="/bem-vindo"
+                className="mt-4 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+              >
+                Escolher minha turma
+              </Link>
+            </>
+          )}
         </div>
       ) : filtradas.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
@@ -172,7 +187,7 @@ export default function Turmas() {
                   <Link to={`/turmas/${t.id}`} className="rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800">
                     Abrir turma
                   </Link>
-                  {!ehPrincipal && (
+                  {!ehPrincipal && profile?.role !== 'admin' && (
                     <button
                       type="button"
                       disabled={salvando}

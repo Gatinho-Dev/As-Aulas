@@ -1,4 +1,5 @@
-/** Grade horária oficial do 6º ano D. Fonte única para a página "Meu Horário". */
+/** Grade horária oficial do 6º ano D. Semente inicial da tabela class_schedules;
+ *  a página "Meu Horário" lê a grade da turma do aluno no banco. */
 
 export type Materia = 'LP' | 'MAT' | 'HIS' | 'GEO' | 'CIE' | 'EF' | 'ART' | 'ING';
 

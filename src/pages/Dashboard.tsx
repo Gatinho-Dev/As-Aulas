@@ -81,6 +81,7 @@ export default function Dashboard() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [temTurma, setTemTurma] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -94,6 +95,22 @@ export default function Dashboard() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    void supabase
+      .from('class_memberships')
+      .select('class_id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('membership_status', 'ativo')
+      .then(({ count }) => {
+        if (active) setTemTurma((count ?? 0) > 0);
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   async function toggle(item: AssignmentRow) {
     if (!userId || !data) return;
@@ -152,6 +169,21 @@ export default function Dashboard() {
         <p className="mt-1 text-slate-600 dark:text-slate-400">Vamos organizar seus estudos?</p>
         <p className="mt-1 text-sm capitalize text-slate-500">{hoje}</p>
       </header>
+
+      {profile?.role !== 'admin' && temTurma === false && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950" role="status">
+          <p className="font-medium text-indigo-900 dark:text-indigo-100">Você ainda não está em nenhuma turma.</p>
+          <p className="mt-1 text-sm text-indigo-800 dark:text-indigo-200">
+            Escolha a sua turma para ver lições, provas, avisos e horários dela.
+          </p>
+          <Link
+            to="/bem-vindo"
+            className="mt-3 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+          >
+            Escolher minha turma
+          </Link>
+        </div>
+      )}
 
       <section aria-labelledby="estatisticas" className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <h2 id="estatisticas" className="sr-only">
