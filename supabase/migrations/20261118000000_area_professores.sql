@@ -127,6 +127,18 @@ drop policy if exists classes_teacher_select on public.classes;
 create policy classes_teacher_select on public.classes for select to authenticated
   using (active and public.is_teacher_of_class(id));
 
+-- Papel de um nick para o login de aluno dar mensagem certa quando o nick é de professor.
+-- (O e-mail de professor nunca é resolvido pelo login de aluno; isso aqui só escolhe a mensagem.)
+create or replace function public.papel_por_nick(p_nick text)
+returns text language sql stable security definer set search_path to '' as $$
+  select p.role::text
+    from public.profiles p
+   where lower(p.username) = lower(btrim(coalesce(p_nick, '')))
+   limit 1;
+$$;
+revoke all on function public.papel_por_nick(text) from public;
+grant execute on function public.papel_por_nick(text) to anon, authenticated;
+
 -- O professor precisa ler os vínculos turma↔matéria das salas dele (sem isso o EXISTS acima não enxerga nada).
 drop policy if exists class_subjects_teacher_select on public.class_subjects;
 create policy class_subjects_teacher_select on public.class_subjects for select to authenticated

@@ -77,7 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // O nick aponta para o e-mail interno da conta. Trocar o nick depois não quebra o login.
     const { data: email, error: erroBusca } = await supabase.rpc('email_de_login_por_nick', { p_nick: nick.trim() });
     if (erroBusca) return traduzirErro(erroBusca.message);
-    if (!email) return 'Nick ou senha incorretos.';
+    if (!email) {
+      // O nick existe mas é de professor: orienta para a área certa em vez de erro genérico.
+      const { data: papel } = await supabase.rpc('papel_por_nick', { p_nick: nick.trim() });
+      if (papel === 'teacher') return 'Esta conta é de professor. Entre pela Área dos professores.';
+      return 'Nick ou senha incorretos.';
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return traduzirErro(error.message);
     // Conta de professor nunca entra pelo login de aluno.
