@@ -182,7 +182,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <header data-tutorial="inicio">
-        <h1 className="text-2xl font-bold">Olá, {nome}! 👋</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">Olá, {nome}! 👋</h1>
         <p className="mt-1 text-slate-600 dark:text-slate-400">Vamos organizar seus estudos?</p>
         <p className="mt-1 text-sm capitalize text-slate-500">{hoje}</p>
       </header>
@@ -445,9 +445,9 @@ function ItemAtividade({
         type="button"
         onClick={onToggle}
         disabled={pending}
-        className="shrink-0 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
+        className="min-h-12 w-full shrink-0 rounded-xl bg-indigo-700 px-4 py-3 text-[15px] font-semibold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60 sm:w-auto sm:min-h-11 sm:py-2 sm:text-sm"
       >
-        {concluida ? 'Desfazer conclusão' : 'Marcar como concluída'}
+        {pending ? 'Salvando…' : concluida ? 'Desfazer conclusão' : 'Marcar como concluída'}
       </button>
     </li>
   );
@@ -456,9 +456,9 @@ function ItemAtividade({
 function Stat({ label, value, hint, tone }: { label: string; value: number | string; hint?: string; tone?: 'danger' }) {
   return (
     <BorderBeam className="rounded-xl" colorVariant="ocean" theme="auto">
-      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm text-slate-600 dark:text-slate-400">{label}</p>
-        <p className={`mt-1 text-2xl font-bold ${tone === 'danger' ? 'text-red-600' : ''}`}>{value}</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+        <p className="text-[13px] leading-snug text-slate-600 sm:text-sm dark:text-slate-400">{label}</p>
+        <p className={`mt-1 text-xl font-bold sm:text-2xl ${tone === 'danger' ? 'text-red-600' : ''}`}>{value}</p>
         {hint && <p className="mt-1 truncate text-xs text-slate-500">{hint}</p>}
       </div>
     </BorderBeam>

@@ -152,6 +152,13 @@ export default function Inicio() {
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
+              to="/professores"
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-tinta-suave transition-colors hover:bg-azul-claro hover:text-marinho sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+            >
+              <GraduationCap className="size-4" aria-hidden="true" />
+              Área dos professores
+            </Link>
+            <Link
               to="/entrar"
               className="rounded-lg px-2.5 py-2 text-sm font-semibold text-marinho transition-colors hover:bg-azul-claro dark:text-slate-200 dark:hover:bg-slate-900 sm:px-3"
             >
@@ -229,9 +236,8 @@ export default function Inicio() {
                 </Liquid.Item>
               </Liquid>
 
-              <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">
-                Leva menos de um minuto. Você só precisa de um nick e da sua turma.
-              </p>
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">Leva menos de um minuto. Você só precisa de um nick e da sua turma.</p>
+              <p className="mt-3 text-sm"><Link to="/professores" className="font-semibold text-azul hover:underline">É professor? Entre na área dos professores</Link></p>
             </div>
 
             <div className="entrada entrada-2">
@@ -531,9 +537,8 @@ export default function Inicio() {
             <Link to="/entrar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
               Entrar
             </Link>
-            <Link to="/entrar?modo=criar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
-              Criar conta
-            </Link>
+            <Link to="/entrar?modo=criar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">Criar conta</Link>
+            <Link to="/professores" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">Área dos professores</Link>
             <a href="#recursos" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
               Recursos
             </a>

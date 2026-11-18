@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import Layout from './pages/Layout';
 import Login from './pages/Login';
+import Professores from './pages/Professores';
+import PainelProfessor from './pages/PainelProfessor';
 import Dashboard from './pages/Dashboard';
 import Assignments from './pages/Assignments';
 import AssignmentDetail from './pages/AssignmentDetail';
@@ -37,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/entrar" element={<Login />} />
+          <Route path="/professores" element={<Professores />} />
           <Route element={<Layout />}>
             <Route path="/bem-vindo" element={<Onboarding />} />
             <Route path="/" element={<Dashboard />} />
@@ -61,6 +64,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/perfil/:id" element={<PerfilColega />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/representante" element={<Representante />} />
+            <Route path="/professor" element={<PainelProfessor />} />
             <Route path="/tutor" element={<TutorIA />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

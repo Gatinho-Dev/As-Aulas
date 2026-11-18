@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import Tutorial from '../tutorial/Tutorial';
 import { chaveSessaoTutorial } from '../tutorial/passos';
 import { urlPublicaAvatar } from '../lib/avatar';
+import { supabase } from '../lib/supabase';
 import { TEMA_KEY } from '../theme';
 import { loadUnreadCount } from './Notificacoes';
 import Inicio from './Inicio';
@@ -40,10 +41,10 @@ const NAV: NavItem[] = [
 const ITEM_ADMIN: NavItem = { to: '/admin', label: 'Administração', icon: Settings, grupo: 'Conta' };
 
 // Atalhos fixos na barra inferior do celular; o restante fica no menu "Mais"
+// 4 atalhos + botão Mais = 5 colunas, cabe bem no polegar e não quebra o grid.
 const NAV_MOBILE: (Omit<NavItem, 'grupo'> & { short: string })[] = [
   { to: '/', label: 'Visão geral', short: 'Início', icon: LayoutDashboard },
   { to: '/licoes', label: 'Lições de casa', short: 'Lições', icon: BookOpen },
-  { to: '/trabalhos', label: 'Trabalhos', short: 'Trabalhos', icon: FolderKanban },
   { to: '/avisos', label: 'Avisos', short: 'Avisos', icon: Megaphone },
   { to: '/calendario', label: 'Calendário', short: 'Agenda', icon: CalendarDays },
 ];
@@ -103,6 +104,8 @@ export default function Layout() {
   const [maisAberto, setMaisAberto] = useState(false);
   const [tutorialAberto, setTutorialAberto] = useState(false);
   const [barraVisivel, setBarraVisivel] = useState(true);
+  // Professor com solicitação pendente: fica só no painel aguardando aprovação.
+  const [aguardandoProf, setAguardandoProf] = useState(false);
   const userId = session?.user.id;
   // Conta de demonstração: o tutorial abre em todo acesso, mesmo já concluído no perfil.
   const tutorialSempreVisivel = profile?.tutorial_sempre_visivel === true;
@@ -120,6 +123,25 @@ export default function Layout() {
     void loadUnreadCount(userId).then(setNaoLidas);
   }, [userId, location.pathname]);
 
+  useEffect(() => {
+    if (!userId || profile?.role !== 'student') {
+      setAguardandoProf(false);
+      return;
+    }
+    // Alunos de nick entram pelo e-mail interno; quem tem e-mail real pode ser professor aguardando.
+    if ((session?.user.email ?? '').endsWith('@alunos.as-aulas.local')) {
+      setAguardandoProf(false);
+      return;
+    }
+    let ativo = true;
+    supabase.from('teacher_requests').select('status').eq('user_id', userId).maybeSingle().then(({ data }) => {
+      if (ativo) setAguardandoProf(data?.status === 'pendente');
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [userId, profile, session]);
+
   if (loading) {
     return (
       <div className="flex min-h-dvh items-center justify-center gap-3 text-slate-500" role="status">
@@ -128,7 +150,20 @@ export default function Layout() {
       </div>
     );
   }
-  if (!session) return location.pathname === '/' ? <Inicio /> : <Navigate to="/entrar" replace />;
+  if (!session) {
+    if (location.pathname === '/') return <Inicio />;
+    if (location.pathname === '/professores') return <Outlet />;
+    return <Navigate to="/entrar" replace />;
+  }
+  // Professores têm painel próprio e não passam pelo onboarding de aluno.
+  if (profile?.role === 'teacher') {
+    if (location.pathname === '/professor') return <Outlet />;
+    if (location.pathname === '/perfil' || location.pathname === '/configuracoes') return <Outlet />;
+    return <Navigate to="/professor" replace />;
+  }
+  // Professor aguardando aprovação não usa o painel do aluno: vai para a tela de espera.
+  if (aguardandoProf && location.pathname === '/professor') return <Outlet />;
+  if (aguardandoProf) return <Navigate to="/professor" replace />;
   // Contas sem perfil concluído só acessam o onboarding até escolher nick e nome.
   if (precisaOnboarding(profile) && location.pathname !== '/bem-vindo') return <Navigate to="/bem-vindo" replace />;
 
@@ -184,7 +219,7 @@ export default function Layout() {
                 to="/notificacoes"
                 data-tutorial="notificacoes"
                 aria-label={naoLidas > 0 ? `Notificações: ${naoLidas} não lida(s)` : 'Notificações'}
-                className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="relative flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <Bell className="size-5" aria-hidden />
                 {naoLidas > 0 && (
@@ -202,7 +237,7 @@ export default function Layout() {
                 onClick={() => setTutorialAberto(true)}
                 aria-label="Ver tutorial novamente"
                 title="Ver tutorial novamente"
-                className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="hidden min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-slate-600 hover:bg-slate-100 sm:flex dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <CircleHelp className="size-5" aria-hidden />
               </button>
@@ -240,7 +275,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 pb-28 sm:px-6 md:px-8 md:py-8 md:pb-10">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 pb-32 sm:px-6 md:px-8 md:py-8 md:pb-10" style={{ paddingBottom: 'calc(8rem + env(safe-area-inset-bottom))' }}>
           <Outlet />
         </main>
 
@@ -267,7 +302,10 @@ export default function Layout() {
         )}
         <div
           id="menu-mais"
-          className={`fixed inset-x-3 bottom-20 z-40 origin-bottom rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl transition md:hidden dark:border-slate-800 dark:bg-slate-900 ${maisAberto ? 'visible scale-100 opacity-100' : 'invisible scale-95 opacity-0'}`}
+          role="dialog"
+          aria-label="Todas as seções"
+          className={`fixed inset-x-3 z-40 origin-bottom rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl transition md:hidden dark:border-slate-800 dark:bg-slate-900 ${maisAberto ? 'visible scale-100 opacity-100' : 'invisible scale-95 opacity-0'}`}
+          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))', maxHeight: 'min(70dvh, 32rem)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
         >
           <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Menu</p>
           {GRUPOS.map((grupo) => {
@@ -276,7 +314,7 @@ export default function Layout() {
             return (
               <div key={grupo} className="mt-1">
                 <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{grupo}</p>
-                <ul className="grid grid-cols-2 gap-1">
+                <ul className="grid grid-cols-1 gap-1 min-[380px]:grid-cols-2">
                   {itens.map((item) => (
                     <li key={item.to}>
                       <NavLink
@@ -285,10 +323,10 @@ export default function Layout() {
                         end={item.to === '/'}
                         onClick={() => setMaisAberto(false)}
                         className={({ isActive }) =>
-                          `flex items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-medium ${isActive ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`
+                          `flex min-h-12 items-center gap-2.5 rounded-xl px-3 py-3 text-[15px] font-medium ${isActive ? 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`
                         }
                       >
-                        <item.icon className="size-5 shrink-0" aria-hidden />
+                        <item.icon className="size-6 shrink-0" aria-hidden />
                         <span>{item.label}</span>
                       </NavLink>
                     </li>
@@ -302,6 +340,7 @@ export default function Layout() {
         <nav
           aria-label="Principal (celular)"
           className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 md:hidden"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           {NAV_MOBILE.map((item) => (
             <NavLink
@@ -311,11 +350,17 @@ export default function Layout() {
               end={item.to === '/'}
               onClick={() => setMaisAberto(false)}
               className={({ isActive }) =>
-                `flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`
+                `flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-medium ${isActive ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`
               }
             >
-              <item.icon className="size-5" aria-hidden />
-              <span className="max-w-full truncate">{item.short}</span>
+              {({ isActive }) => (
+                <>
+                  <span className={`flex items-center justify-center rounded-full px-4 py-1 ${isActive ? 'bg-indigo-100 dark:bg-indigo-950' : ''}`}>
+                    <item.icon className="size-6" aria-hidden />
+                  </span>
+                  <span className="max-w-full truncate leading-tight">{item.short}</span>
+                </>
+              )}
             </NavLink>
           ))}
           <button
@@ -324,10 +369,12 @@ export default function Layout() {
             onClick={() => setMaisAberto((v) => !v)}
             aria-expanded={maisAberto}
             aria-controls="menu-mais"
-            className={`flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${maisAberto ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-medium ${maisAberto ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400'}`}
           >
-            <MoreHorizontal className="size-5" aria-hidden />
-            <span>Mais</span>
+            <span className={`flex items-center justify-center rounded-full px-4 py-1 ${maisAberto ? 'bg-indigo-100 dark:bg-indigo-950' : ''}`}>
+              <MoreHorizontal className="size-6" aria-hidden />
+            </span>
+            <span className="leading-tight">Mais</span>
           </button>
         </nav>
       </div>
@@ -358,8 +405,9 @@ function BuscaForm() {
         type="search"
         value={termo}
         onChange={(e) => setTermo(e.target.value)}
-        placeholder="Buscar…"
-        className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm text-slate-900 focus-visible:outline-2 focus-visible:outline-indigo-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+        placeholder="Buscar lições, avisos, turmas…"
+        enterKeyHint="search"
+        className="min-h-11 w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-base text-slate-900 focus-visible:outline-2 focus-visible:outline-indigo-600 sm:text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
       />
     </form>
   );

@@ -206,7 +206,7 @@ export default function Turmas() {
                     <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-indigo-800">✓ Definida — o site já mostra esta sala</span>
                   ) : turma ? (
                     <>
-                      <button type="button" disabled={busy} onClick={() => void entrarNaSala(turma.id, turma.name)} className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60">Definir turma</button>
+                      <button type="button" disabled={busy} onClick={() => void entrarNaSala(turma.id, turma.name)} className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60">Definir turma</button>
                       <Link to={`/turmas/${turma.id}`} className="text-xs font-medium text-slate-500 hover:underline">abrir detalhes</Link>
                     </>
                   ) : (
@@ -292,7 +292,7 @@ export default function Turmas() {
                 onClick={() => setAnoSel(String(a))}
                 aria-pressed={selecionado}
                 title={ehMeuAno ? 'Seu ano — toque para ver sua sala' : anoLabel(a)}
-                className={`rounded-xl border px-2 py-4 text-center font-bold ${
+                className={`min-h-20 rounded-xl border px-2 py-4 text-center font-bold active:scale-[0.98] ${
                   selecionado
                     ? 'border-indigo-600 bg-indigo-700 text-white shadow'
                     : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
@@ -360,7 +360,7 @@ export default function Turmas() {
                       type="button"
                       disabled={busy}
                       onClick={() => void trocarPrincipal(s.minha!.class_id, s.nome)}
-                      className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60"
+                      className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60"
                     >
                       {busy ? 'Definindo…' : 'Definir turma'}
                     </button>
@@ -369,7 +369,7 @@ export default function Turmas() {
                       type="button"
                       disabled={busy}
                       onClick={() => void entrarNaSala(s.opcao!.id, s.nome)}
-                      className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60"
+                      className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60"
                     >
                       {busy ? 'Definindo…' : 'Definir turma'}
                     </button>

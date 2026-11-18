@@ -128,10 +128,10 @@ export default function Assignments() {
                   <ProfessorResponsavel nome={item.professor} className="mt-1" />
                   <AutorConteudo autor={item.autor} className="mt-0.5" />
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
                   <Link
                     to={`/licoes/${item.id}`}
-                    className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 px-3 py-3 text-[15px] font-medium hover:bg-slate-100 sm:min-h-11 sm:py-2 sm:text-sm dark:border-slate-700 dark:hover:bg-slate-800"
                   >
                     Detalhes
                   </Link>
@@ -139,9 +139,9 @@ export default function Assignments() {
                     type="button"
                     onClick={() => void toggle(item)}
                     disabled={pendingId === item.id}
-                    className="min-h-11 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
+                    className="min-h-12 rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-semibold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60 sm:min-h-11 sm:py-2 sm:text-sm"
                   >
-                    {concluida ? 'Desfazer conclusão' : 'Marcar como concluída'}
+                    {pendingId === item.id ? 'Salvando…' : concluida ? 'Desfazer' : 'Concluir'}
                   </button>
                 </div>
               </li>
