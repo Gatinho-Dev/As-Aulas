@@ -42,7 +42,7 @@ export default function Turmas() {
     useTurmaPrincipal();
 
   const [todasTurmas, setTodasTurmas] = useState<Turma[] | null>(ehAdmin ? null : []);
-  const [anoSel, setAnoSel] = useState('');
+  const [anoSel, setAnoSel] = useState(() => { try { return localStorage.getItem('turma-ano-sel') ?? ''; } catch { return ''; } });
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
@@ -82,10 +82,15 @@ export default function Turmas() {
     };
   }, [ehAdmin, minhasTurmas]);
 
-  // Quando carrega, já deixa selecionado o ano da turma principal.
+  // Ano já escolhido fica azulzinho e é lembrado. Se nunca escolheu, usa o ano da principal.
   useEffect(() => {
     if (!anoSel && principal) setAnoSel(String(principal.school_year));
   }, [principal, anoSel]);
+  useEffect(() => {
+    try {
+      if (anoSel) localStorage.setItem('turma-ano-sel', anoSel);
+    } catch { /* ignora */ }
+  }, [anoSel]);
 
   const salasDoAno = useMemo(() => {
     if (!anoSel) return [];
@@ -250,27 +255,40 @@ export default function Turmas() {
         </p>
       )}
 
-      {/* PASSO 1 — só os 4 anos */}
+      {/* PASSO 1 — só os 4 anos. O ano já escolhido fica azulzinho. */}
       <div>
         <h2 className="mb-2 font-semibold">1. Escolha o ano</h2>
         <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
-          {ANOS_FUND2.map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => setAnoSel(String(a))}
-              aria-pressed={anoSel === String(a)}
-              className={`rounded-xl border px-2 py-4 text-center font-bold ${
-                anoSel === String(a)
-                  ? 'border-indigo-600 bg-indigo-700 text-white'
-                  : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
-              }`}
-            >
-              <span className="block text-xl">{a}º</span>
-              <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
-            </button>
-          ))}
+          {ANOS_FUND2.map((a) => {
+            const selecionado = anoSel === String(a);
+            const ehMeuAno = principal ? String(principal.school_year) === String(a) : false;
+            return (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAnoSel(String(a))}
+                aria-pressed={selecionado}
+                title={ehMeuAno ? 'Seu ano — toque para ver sua sala' : anoLabel(a)}
+                className={`rounded-xl border px-2 py-4 text-center font-bold ${
+                  selecionado
+                    ? 'border-indigo-600 bg-indigo-700 text-white shadow'
+                    : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span className="block text-xl">{a}º</span>
+                <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
+                {ehMeuAno && (
+                  <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${selecionado ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200'}`}>
+                    ● seu ano
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
+        {principal && anoSel === String(principal.school_year) && (
+          <p className="mt-2 text-sm text-indigo-700 dark:text-indigo-300">Esse ano azulzinho é o seu — abaixo está a sua sala marcada como Principal.</p>
+        )}
       </div>
 
       {/* PASSO 2 — só aparece depois do ano */}
@@ -289,17 +307,17 @@ export default function Turmas() {
               return (
                 <li
                   key={s.letra}
-                  className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center ${
+                  className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center ${
                     ehPrincipal
-                      ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-300 dark:border-indigo-600 dark:bg-indigo-950'
+                      ? 'border-indigo-600 bg-indigo-700 text-white shadow-lg ring-2 ring-indigo-300 dark:border-indigo-400 dark:bg-indigo-800'
                       : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
                   }`}
                 >
                   <span className="text-3xl font-extrabold">{s.letra}</span>
                   <span className="text-xs text-slate-500">{s.nome}</span>
                   {ehPrincipal ? (
-                    <span className="rounded-full bg-indigo-700 px-2 py-0.5 text-xs font-semibold text-white">
-                      Principal
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-indigo-800">
+                      ● Sua sala — Principal
                     </span>
                   ) : estouDentro ? (
                     <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium dark:bg-slate-700">
