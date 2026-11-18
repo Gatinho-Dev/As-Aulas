@@ -1,0 +1,9 @@
+
+> as-aulas@0.1.0 build
+> tsc -b && vite build
+
+src/components/CarregandoIA.tsx(7,36): error TS2322: Type '24' is not assignable to type 'OrbSize | undefined'.
+src/pages/Layout.tsx(126,41): error TS2322: Type '40' is not assignable to type 'OrbSize | undefined'.
+src/pages/Login.tsx(61,41): error TS2322: Type '40' is not assignable to type 'OrbSize | undefined'.
+src/tutor/Simulado.tsx(15,8): error TS2300: Duplicate identifier 'CarregandoIA'.
+src/tutor/Simulado.tsx(16,8): error TS2300: Duplicate identifier 'CarregandoIA'.

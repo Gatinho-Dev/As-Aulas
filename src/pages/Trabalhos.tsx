@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import AutorConteudo from '../components/AutorConteudo';
 import ProfessorResponsavel from '../components/ProfessorResponsavel';
 import {
@@ -29,6 +30,8 @@ export default function Trabalhos() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [visao, setVisao] = useState<'lista' | 'quadro'>('lista');
   const [disciplina, setDisciplina] = useState('');
+  const { principalId, principal } = useTurmaPrincipal();
+  const [soPrincipal, setSoPrincipal] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
@@ -53,8 +56,13 @@ export default function Trabalhos() {
   }, [items]);
 
   const filtrados = useMemo(
-    () => (items ?? []).filter((i) => !disciplina || i.subject_id === disciplina),
-    [items, disciplina],
+    () =>
+      (items ?? []).filter(
+        (i) =>
+          (!disciplina || i.subject_id === disciplina) &&
+          (!soPrincipal || !principalId || !i.class_id || i.class_id === principalId),
+      ),
+    [items, disciplina, soPrincipal, principalId],
   );
 
   async function mudar(item: AssignmentRow, status: ProgressStatus) {
@@ -120,6 +128,23 @@ export default function Trabalhos() {
           </div>
         </div>
       </div>
+
+      {principal && (
+        <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900" role="status">
+          <label className="flex flex-wrap items-center gap-2">
+            <input
+              type="checkbox"
+              checked={soPrincipal}
+              onChange={(e) => setSoPrincipal(e.target.checked)}
+              className="size-4 accent-indigo-700"
+            />
+            Mostrar só da turma principal (<strong>{principal.name}</strong>)
+            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+              Trocar
+            </Link>
+          </label>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">

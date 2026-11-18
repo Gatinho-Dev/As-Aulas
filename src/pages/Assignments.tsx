@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import AutorConteudo from '../components/AutorConteudo';
 import ProfessorResponsavel from '../components/ProfessorResponsavel';
 import {
@@ -20,6 +21,8 @@ export default function Assignments() {
   const [progress, setProgress] = useState<Record<string, Progress>>({});
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const { principalId, principal } = useTurmaPrincipal();
+  const [soPrincipal, setSoPrincipal] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
@@ -91,13 +94,30 @@ export default function Assignments() {
     <section aria-labelledby="titulo-licoes">
       <h1 id="titulo-licoes" className="text-2xl font-bold">Lições de casa</h1>
 
+      {principal && (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900" role="status">
+          <label className="flex flex-wrap items-center gap-2">
+            <input
+              type="checkbox"
+              checked={soPrincipal}
+              onChange={(e) => setSoPrincipal(e.target.checked)}
+              className="size-4 accent-indigo-700"
+            />
+            Mostrar só da turma principal (<strong>{principal.name}</strong>)
+            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+              Trocar
+            </Link>
+          </label>
+        </div>
+      )}
+
       {error && (
         <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
           {error}
         </p>
       )}
 
-      {items.length === 0 && !error ? (
+      {(soPrincipal && principalId ? items.filter((i) => !i.class_id || i.class_id === principalId) : items).length === 0 && !error ? (
         <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
           <p className="font-medium">Nenhuma lição de casa publicada para você ainda.</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
@@ -106,7 +126,7 @@ export default function Assignments() {
         </div>
       ) : (
         <ul className="mt-6 space-y-3">
-          {items.map((item) => {
+          {(soPrincipal && principalId ? items.filter((i) => !i.class_id || i.class_id === principalId) : items).map((item) => {
             const status = statusOf(item.due_at, progress[item.id]?.personal_status);
             const concluida = status === 'concluida';
             return (

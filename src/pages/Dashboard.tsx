@@ -4,6 +4,7 @@ import { ThinkingOrb } from 'thinking-orbs';
 import { BorderBeam } from 'border-beam';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import AutorConteudo from '../components/AutorConteudo';
 import type { AutorResumo } from '../lib/pessoa';
 import {
@@ -36,7 +37,9 @@ type AnnouncementRow = {
   category: string;
   importance: string;
   published_at: string;
+  is_global?: boolean;
   autor?: AutorResumo | null;
+  announcement_targets?: { class_id: string }[];
 };
 
 type Data = {
@@ -50,17 +53,17 @@ async function loadDashboard(): Promise<Data> {
   const [groups, progress, events, announcements] = await Promise.all([
     Promise.all([loadAssignments('licao_casa'), loadAssignments('trabalho'), loadAssignments('prova')]),
     loadProgressMap(),
-    supabase
-      .from('events')
-      .select('id, title, category, starts_at, location, classes(name)')
+            supabase
+          .from('events')
+          .select('id, title, category, starts_at, location, class_id, classes(name)')
       .gte('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true })
       .limit(5),
-    supabase
-      .from('announcements')
-      .select(
-        'id, title, category, importance, published_at, autor:profiles!announcements_author_id_fkey(display_name, avatar_path, accent_color)',
-      )
+            supabase
+          .from('announcements')
+          .select(
+            'id, title, category, importance, published_at, is_global, autor:profiles!announcements_author_id_fkey(display_name, avatar_path, accent_color), announcement_targets(class_id)',
+          )
       .eq('status', 'publicado')
       .order('published_at', { ascending: false })
       .limit(3),
@@ -82,6 +85,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [temTurma, setTemTurma] = useState<boolean | null>(null);
+  const { principalId, principal, minhasTurmas } = useTurmaPrincipal();
 
   const load = useCallback(async () => {
     setError(null);
@@ -125,7 +129,20 @@ export default function Dashboard() {
     await load();
   }
 
-  const view = useMemo(() => (data ? buildView(data) : null), [data]);
+  const dadosFiltrados = useMemo(() => {
+    if (!data) return null;
+    if (!principalId || (minhasTurmas ?? []).length <= 1) return data;
+    return {
+      ...data,
+      assignments: data.assignments.filter((a) => !a.class_id || a.class_id === principalId),
+      events: data.events.filter((e) => !(e as unknown as { class_id?: string | null }).class_id || (e as unknown as { class_id?: string | null }).class_id === principalId),
+      announcements: data.announcements.filter(
+        (a) => a.is_global || (a.announcement_targets ?? []).some((t) => t.class_id === principalId),
+      ),
+    };
+  }, [data, principalId, minhasTurmas]);
+
+  const view = useMemo(() => (dadosFiltrados ? buildView(dadosFiltrados) : null), [dadosFiltrados]);
 
   if (error) {
     return (
@@ -169,6 +186,17 @@ export default function Dashboard() {
         <p className="mt-1 text-slate-600 dark:text-slate-400">Vamos organizar seus estudos?</p>
         <p className="mt-1 text-sm capitalize text-slate-500">{hoje}</p>
       </header>
+
+      {profile?.role !== 'admin' && principal && (minhasTurmas ?? []).length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900" role="status">
+          <p>
+            Mostrando o conteúdo da turma principal <strong>{principal.name}</strong>.{' '}
+            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+              Trocar turma principal
+            </Link>
+          </p>
+        </div>
+      )}
 
       {profile?.role !== 'admin' && temTurma === false && (
         <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950" role="status">

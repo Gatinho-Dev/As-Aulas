@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import AutorConteudo from '../components/AutorConteudo';
 import ProfessorResponsavel from '../components/ProfessorResponsavel';
 import {
@@ -25,8 +26,14 @@ export default function Provas() {
   const [items, setItems] = useState<AssignmentRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [turma, setTurma] = useState('');
+  const { principalId, principal } = useTurmaPrincipal();
   const [disciplina, setDisciplina] = useState('');
   const [periodo, setPeriodo] = useState<Periodo>('futuras');
+
+  useEffect(() => {
+    if (principalId && !turma) setTurma(principalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [principalId]);
 
   useEffect(() => {
     loadAssignments('prova')
@@ -119,11 +126,21 @@ export default function Provas() {
         )}
       </div>
 
+      {principal && (
+        <p className="text-sm text-slate-600 dark:text-slate-400" role="status">
+          Mostrando a turma principal <strong>{principal.name}</strong>. Para ver outra, troque o filtro ou{' '}
+          <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+            troque a turma principal
+          </Link>
+          .
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-3">
         <label className="text-sm">
           <span className="sr-only">Filtrar por turma</span>
           <select value={turma} onChange={(e) => setTurma(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-            <option value="">Todas as turmas</option>
+            <option value="">Todas as minhas turmas</option>
             {turmas.map(([id, nome]) => (
               <option key={id} value={id}>
                 {nome}

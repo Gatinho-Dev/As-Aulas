@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import { addDays, dayKey, TYPE_LABEL, TZ, type AssignmentType } from './assignmentUtils';
 import { inputClass } from './Login';
 
@@ -76,6 +77,7 @@ export default function Calendario() {
   const [disciplinaFiltro, setDisciplinaFiltro] = useState('');
   const [itens, setItens] = useState<Item[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const { principalId, principal } = useTurmaPrincipal();
 
   useEffect(() => {
     let ativo = true;
@@ -121,6 +123,11 @@ export default function Calendario() {
       ativo = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (principalId && !turmaFiltro) setTurmaFiltro(principalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [principalId]);
 
   const turmas = useMemo(() => {
     const m = new Map<string, string>();
@@ -187,6 +194,14 @@ export default function Calendario() {
           Calendário
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">Provas, trabalhos, lições e eventos nas datas corretas.</p>
+        {principal && (
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400" role="status">
+            Turma principal: <strong>{principal.name}</strong>.{' '}
+            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+              Trocar
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
@@ -216,7 +231,7 @@ export default function Calendario() {
         <div>
           <label htmlFor="cal-turma" className="mb-1 block text-sm font-medium">Turma</label>
           <select id="cal-turma" value={turmaFiltro} onChange={(e) => setTurmaFiltro(e.target.value)} className={selectClass}>
-            <option value="">Todas</option>
+            <option value="">Todas as minhas</option>
             {turmas.map(([id, nome]) => (
               <option key={id} value={id}>{nome}</option>
             ))}

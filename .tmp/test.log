@@ -1,0 +1,17 @@
+
+ RUN  v3.2.7 /workspace/chats/8909edea033412cec3f17455
+
+ ✓ src/pages/Notificacoes.test.ts (4 tests) 3ms
+ ✓ src/tutorial/passos.test.ts (5 tests) 6ms
+ ✓ src/pages/assignmentUtils.test.ts (6 tests) 18ms
+ ✓ src/tutor/Markdown.test.tsx (3 tests) 12ms
+ ✓ src/tutor/ui/contrato.test.ts (6 tests) 6ms
+ ✓ src/lib/recorteFoto.test.ts (8 tests) 5ms
+ ✓ src/tutor/simuladoUtils.test.ts (3 tests) 3ms
+ ✓ src/tutor/ui/fracoes.test.ts (4 tests) 4ms
+
+ Test Files  8 passed (8)
+      Tests  39 passed (39)
+   Start at  00:07:42
+   Duration  2.02s (transform 219ms, setup 0ms, collect 407ms, tests 59ms, environment 1ms, prepare 502ms)
+

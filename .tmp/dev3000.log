@@ -1,0 +1,22 @@
+
+> as-aulas@0.1.0 dev
+> vite --host 0.0.0.0 --port 3000
+
+
+  VITE v7.3.7  ready in 181 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://169.254.77.2:3000/
+12:22:57 AM [vite] (client) page reload freebuff-sites-build/assets/index.html
+12:26:08 AM [vite] (client) hmr update /src/pages/Turmas.tsx, /src/index.css
+12:26:21 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/index.css
+12:26:27 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/index.css
+12:26:37 AM [vite] (client) hmr update /src/pages/Assignments.tsx, /src/index.css
+12:26:45 AM [vite] (client) hmr update /src/pages/Trabalhos.tsx, /src/index.css
+12:26:53 AM [vite] (client) hmr update /src/pages/Provas.tsx, /src/index.css
+12:27:02 AM [vite] (client) hmr update /src/pages/Avisos.tsx, /src/index.css
+12:27:11 AM [vite] (client) hmr update /src/pages/Calendario.tsx, /src/index.css
+12:27:38 AM [vite] (client) hmr update /src/pages/Calendario.tsx, /src/index.css
+12:27:39 AM [vite] (client) hmr update /src/pages/Provas.tsx, /src/index.css
+12:27:42 AM [vite] (client) hmr update /src/pages/Trabalhos.tsx, /src/index.css
+12:28:08 AM [vite] (client) hmr update /src/pages/Disciplinas.tsx, /src/index.css

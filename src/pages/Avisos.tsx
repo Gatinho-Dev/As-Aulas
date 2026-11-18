@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import AutorConteudo from '../components/AutorConteudo';
 import type { AutorResumo } from '../lib/pessoa';
 import { formatDateTime } from './assignmentUtils';
@@ -33,6 +35,7 @@ export default function Avisos() {
   const [busca, setBusca] = useState('');
   const [categoria, setCategoria] = useState('');
   const [turma, setTurma] = useState('');
+  const { principalId, principal } = useTurmaPrincipal();
 
   useEffect(() => {
     void (async () => {
@@ -51,6 +54,11 @@ export default function Avisos() {
       setAvisos((data ?? []) as unknown as Aviso[]);
     })();
   }, []);
+
+  useEffect(() => {
+    if (principalId && !turma) setTurma(principalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [principalId]);
 
   const turmas = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -84,6 +92,15 @@ export default function Avisos() {
       <h1 id="titulo-avisos" className="text-2xl font-bold">
         Mural de avisos
       </h1>
+      {principal && (
+        <p className="text-sm text-slate-600 dark:text-slate-400" role="status">
+          Mostrando a turma principal <strong>{principal.name}</strong>. Para ver outra, troque o filtro ou{' '}
+          <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+            troque a turma principal
+          </Link>
+          .
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
@@ -116,7 +133,7 @@ export default function Avisos() {
         <label className="text-sm">
           <span className="sr-only">Filtrar por turma</span>
           <select value={turma} onChange={(e) => setTurma(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-            <option value="">Todas as turmas</option>
+            <option value="">Todas as minhas turmas</option>
             {turmas.map(([id, nome]) => (
               <option key={id} value={id}>
                 {nome}

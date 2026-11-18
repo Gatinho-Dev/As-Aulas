@@ -1,0 +1,10 @@
+
+> as-aulas@0.1.0 build
+> tsc -b && vite build
+
+src/pages/Dashboard.tsx(2,10): error TS2300: Duplicate identifier 'Link'.
+src/pages/Dashboard.tsx(3,10): error TS2300: Duplicate identifier 'Link'.
+src/pages/Horario.tsx(90,21): error TS2352: Conversion of type '{ class_id: any; classes: { id: any; name: any; }[]; }[]' to type '{ class_id: string; classes: TurmaResumo | null; }[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ class_id: any; classes: { id: any; name: any; }[]; }' is not comparable to type '{ class_id: string; classes: TurmaResumo | null; }'.
+    Types of property 'classes' are incompatible.
+      Type '{ id: any; name: any; }[]' is missing the following properties from type 'TurmaResumo': id, name

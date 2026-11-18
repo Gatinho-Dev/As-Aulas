@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTurmaPrincipal } from '../lib/useTurmaPrincipal';
 import { inputClass } from './Login';
 import { anoLabel } from './Turmas';
 
@@ -15,6 +16,7 @@ export default function Disciplinas() {
   const [vinculos, setVinculos] = useState<Vinculo[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [turmaFiltro, setTurmaFiltro] = useState('');
+  const { principalId, principal } = useTurmaPrincipal();
 
   useEffect(() => {
     void (async () => {
@@ -29,6 +31,11 @@ export default function Disciplinas() {
       setVinculos((data ?? []) as unknown as Vinculo[]);
     })();
   }, []);
+
+  useEffect(() => {
+    if (principalId && !turmaFiltro) setTurmaFiltro(principalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [principalId]);
 
   const turmas = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -50,6 +57,14 @@ export default function Disciplinas() {
           Disciplinas
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">Matérias de cada turma e seus professores.</p>
+        {principal && (
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400" role="status">
+            Turma principal: <strong>{principal.name}</strong>.{' '}
+            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
+              Trocar
+            </Link>
+          </p>
+        )}
       </div>
 
       {erro && (
@@ -68,7 +83,7 @@ export default function Disciplinas() {
           onChange={(e) => setTurmaFiltro(e.target.value)}
           className={inputClass}
         >
-          <option value="">Todas as turmas</option>
+          <option value="">Todas as minhas turmas</option>
           {turmas.map(([id, nome]) => (
             <option key={id} value={id}>
               {nome}
