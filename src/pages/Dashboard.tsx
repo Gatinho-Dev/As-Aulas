@@ -85,7 +85,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [temTurma, setTemTurma] = useState<boolean | null>(null);
-  const { principalId, principal, minhasTurmas } = useTurmaPrincipal();
+  const { principalId, minhasTurmas } = useTurmaPrincipal();
 
   const load = useCallback(async () => {
     setError(null);
@@ -186,17 +186,6 @@ export default function Dashboard() {
         <p className="mt-1 text-slate-600 dark:text-slate-400">Vamos organizar seus estudos?</p>
         <p className="mt-1 text-sm capitalize text-slate-500">{hoje}</p>
       </header>
-
-      {profile?.role !== 'admin' && principal && (minhasTurmas ?? []).length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900" role="status">
-          <p>
-            Mostrando o conteúdo da turma principal <strong>{principal.name}</strong>.{' '}
-            <Link to="/turmas" className="font-medium text-indigo-800 hover:underline dark:text-indigo-300">
-              Trocar turma principal
-            </Link>
-          </p>
-        </div>
-      )}
 
       {profile?.role !== 'admin' && temTurma === false && (
         <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950" role="status">
