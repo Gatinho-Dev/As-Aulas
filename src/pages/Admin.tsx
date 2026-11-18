@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase';
 import { formatDateTime, TYPE_LABEL, type AssignmentType } from './assignmentUtils';
 import { inputClass } from './Login';
 import { anoLabel, TURNO_LABEL } from './Turmas';
+import ProfessoresAdmin from './ProfessoresAdmin';
 
-type Aba = 'turmas' | 'disciplinas' | 'representantes' | 'atividades' | 'avisos';
+type Aba = 'turmas' | 'disciplinas' | 'representantes' | 'atividades' | 'avisos' | 'professores';
 
 const ABAS: { id: Aba; label: string }[] = [
   { id: 'turmas', label: 'Turmas' },
@@ -13,6 +14,7 @@ const ABAS: { id: Aba; label: string }[] = [
   { id: 'representantes', label: 'Representantes' },
   { id: 'atividades', label: 'Atividades' },
   { id: 'avisos', label: 'Avisos' },
+  { id: 'professores', label: 'Professores' },
 ];
 
 const CATEGORIAS_AVISO: Record<string, string> = {
@@ -114,6 +116,7 @@ export default function Admin() {
       {aba === 'representantes' && <RepresentantesAdmin />}
       {aba === 'atividades' && <AtividadesAdmin autorId={autorId} />}
       {aba === 'avisos' && <AvisosAdmin autorId={autorId} />}
+      {aba === 'professores' && <ProfessoresAdmin />}
     </section>
   );
 }
@@ -420,7 +423,7 @@ function DisciplinasAdmin() {
 
 /* ---------------- Atividades ---------------- */
 
-export function AtividadesAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?: string[] }) {
+export function AtividadesAdmin({ autorId, turmaIds, turmaFixa }: { autorId: string; turmaIds?: string[]; turmaFixa?: string }) {
   const [atividades, setAtividades] = useState<AtividadeAdmin[] | null>(null);
   const [turmas, setTurmas] = useState<TurmaAdmin[]>([]);
   const [disciplinas, setDisciplinas] = useState<DisciplinaAdmin[]>([]);
@@ -456,7 +459,8 @@ export function AtividadesAdmin({ autorId, turmaIds }: { autorId: string; turmaI
     e.preventDefault();
     const novos: Erros = {};
     if (!titulo.trim()) novos.titulo = 'Informe o título.';
-    if (!turmaId) novos.turma = 'Escolha a turma.';
+    const turmaDestino = turmaFixa ?? turmaId;
+    if (!turmaDestino) novos.turma = 'Escolha a turma.';
     if (!disciplinaId) novos.disciplina = 'Escolha a disciplina.';
     if (!prazo) novos.prazo = 'Informe o prazo de entrega.';
     else if (publicar && new Date(prazo).getTime() < Date.now()) novos.prazo = 'Um item publicado precisa de prazo futuro.';
@@ -468,7 +472,7 @@ export function AtividadesAdmin({ autorId, turmaIds }: { autorId: string; turmaI
       type: tipo,
       title: titulo.trim(),
       description: descricao.trim() || null,
-      class_id: turmaId,
+      class_id: turmaDestino,
       subject_id: disciplinaId,
       due_at: new Date(prazo).toISOString(),
       status: publicar ? 'publicada' : 'rascunho',
@@ -543,12 +547,18 @@ export function AtividadesAdmin({ autorId, turmaIds }: { autorId: string; turmaI
         <Campo id="ativ-titulo" label="Título" erro={erros.titulo}>
           <input id="ativ-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={150} className={inputClass} aria-invalid={!!erros.titulo} />
         </Campo>
-        <Campo id="ativ-turma" label="Turma" erro={erros.turma}>
-          <select id="ativ-turma" value={turmaId} onChange={(e) => setTurmaId(e.target.value)} className={inputClass}>
-            <option value="">Escolha…</option>
-            {turmas.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-        </Campo>
+        {turmaFixa ? (
+          <p className="rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-semibold text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200">
+            Publicando em: {turmas.find((t) => t.id === turmaFixa)?.name ?? 'sala selecionada'}
+          </p>
+        ) : (
+          <Campo id="ativ-turma" label="Turma" erro={erros.turma}>
+            <select id="ativ-turma" value={turmaId} onChange={(e) => setTurmaId(e.target.value)} className={inputClass}>
+              <option value="">Escolha…</option>
+              {turmas.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </Campo>
+        )}
         <Campo id="ativ-disc" label="Disciplina" erro={erros.disciplina}>
           <select id="ativ-disc" value={disciplinaId} onChange={(e) => setDisciplinaId(e.target.value)} className={inputClass}>
             <option value="">Escolha…</option>
@@ -704,7 +714,7 @@ function RepresentantesAdmin() {
 
 /* ---------------- Avisos ---------------- */
 
-export function AvisosAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?: string[] }) {
+export function AvisosAdmin({ autorId, turmaIds, turmaFixa }: { autorId: string; turmaIds?: string[]; turmaFixa?: string }) {
   const representante = !!turmaIds;
   const [avisos, setAvisos] = useState<AvisoAdmin[] | null>(null);
   const [turmas, setTurmas] = useState<TurmaAdmin[]>([]);
@@ -742,7 +752,8 @@ export function AvisosAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?:
     const novos: Erros = {};
     if (!titulo.trim()) novos.titulo = 'Informe o título do aviso.';
     if (!corpo.trim()) novos.corpo = 'Escreva o texto do aviso.';
-    if (!paraTodos && turmasSel.length === 0) novos.destino = 'Escolha pelo menos uma turma ou marque "Para todas as turmas".';
+    const destinoFixo = turmaFixa ? [turmaFixa] : turmasSel;
+    if (!paraTodos && destinoFixo.length === 0) novos.destino = 'Escolha pelo menos uma turma ou marque "Para todas as turmas".';
     setErros(novos);
     if (Object.keys(novos).length) return;
 
@@ -768,7 +779,7 @@ export function AvisosAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?:
     if (!paraTodos) {
       const { error: errAlvo } = await supabase
         .from('announcement_targets')
-        .insert(turmasSel.map((class_id) => ({ announcement_id: data.id, class_id })));
+        .insert(destinoFixo.map((class_id) => ({ announcement_id: data.id, class_id })));
       if (errAlvo) {
         setMsg({ tipo: 'erro', texto: 'O aviso foi criado, mas não foi possível associar as turmas. Edite-o para tentar de novo.' });
         void carregar();
@@ -843,6 +854,11 @@ export function AvisosAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?:
             </select>
           </div>
         </div>
+        {turmaFixa ? (
+          <p className="rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-semibold text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200">
+            Publicando em: {turmas.find((t) => t.id === turmaFixa)?.name ?? 'sala selecionada'}
+          </p>
+        ) : (
         <fieldset className="space-y-2">
           <legend className="mb-1 text-sm font-medium">Destinatários</legend>
           {!representante && (
@@ -863,6 +879,7 @@ export function AvisosAdmin({ autorId, turmaIds }: { autorId: string; turmaIds?:
           )}
           {erros.destino && <p className="text-sm text-red-700 dark:text-red-300">{erros.destino}</p>}
         </fieldset>
+        )}
         <button type="submit" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800">Publicar aviso</button>
       </form>
     </div>

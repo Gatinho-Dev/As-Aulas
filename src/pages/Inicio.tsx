@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, type ReactNode } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import {
   ArrowRight,
   CalendarDays,
@@ -101,7 +102,31 @@ const PERGUNTAS = [
   },
 ];
 
+const DEMO_NICK = 'teste';
+const DEMO_PASSWORD = 'demo1234';
+
 export default function Inicio() {
+  const navigate = useNavigate();
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [demoErro, setDemoErro] = useState<string | null>(null);
+
+  async function entrarDemo() {
+    if (demoBusy) return;
+    setDemoErro(null);
+    setDemoBusy(true);
+    try {
+      const { data: email, error: erroBusca } = await supabase.rpc('email_de_login_por_nick', { p_nick: DEMO_NICK });
+      if (erroBusca || !email) throw new Error('busca');
+      const { error } = await supabase.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+      if (error) throw error;
+      navigate('/licoes', { replace: true });
+    } catch {
+      setDemoErro('Não foi possível entrar na demonstração. Tente novamente.');
+    } finally {
+      setDemoBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-white font-body text-tinta dark:bg-slate-950 dark:text-slate-100">
       <a
@@ -126,6 +151,13 @@ export default function Inicio() {
             ))}
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/professores"
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-tinta-suave transition-colors hover:bg-azul-claro hover:text-marinho sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+            >
+              <GraduationCap className="size-4" aria-hidden="true" />
+              Área dos professores
+            </Link>
             <Link
               to="/entrar"
               className="rounded-lg px-2.5 py-2 text-sm font-semibold text-marinho transition-colors hover:bg-azul-claro dark:text-slate-200 dark:hover:bg-slate-900 sm:px-3"
@@ -204,9 +236,8 @@ export default function Inicio() {
                 </Liquid.Item>
               </Liquid>
 
-              <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">
-                Leva menos de um minuto. Você só precisa de um nick e da sua turma.
-              </p>
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-500">Leva menos de um minuto. Você só precisa de um nick e da sua turma.</p>
+              <p className="mt-3 text-sm"><Link to="/professores" className="font-semibold text-azul hover:underline">É professor? Entre na área dos professores</Link></p>
             </div>
 
             <div className="entrada entrada-2">
@@ -388,6 +419,16 @@ export default function Inicio() {
                 ))}
               </ol>
             </div>
+
+            <div className="mx-auto mt-12 max-w-2xl rounded-2xl border border-slate-200 bg-fundo p-6 text-center dark:border-slate-800 dark:bg-slate-900/40">
+              <h3 className="font-display text-lg font-semibold text-marinho dark:text-white">Quer ver por dentro antes de criar sua conta?</h3>
+              <p className="mt-2 text-sm leading-relaxed text-tinta-suave dark:text-slate-400">Entre na conta de demonstração com um toque, sem senha. Ela já vem com lições, trabalho e prova de exemplo para marcar como concluídas — elas ficam lá para sempre e o passo a passo de como usar aparece sozinho.</p>
+              <button type="button" onClick={() => void entrarDemo()} disabled={demoBusy} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-azul px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-azul/20 transition-colors hover:bg-indigo-800 disabled:opacity-60">
+                {demoBusy ? 'Entrando…' : 'Entrar na conta de demonstração'}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </button>
+              {demoErro && (<p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">{demoErro}</p>)}
+            </div>
           </div>
         </section>
 
@@ -496,9 +537,8 @@ export default function Inicio() {
             <Link to="/entrar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
               Entrar
             </Link>
-            <Link to="/entrar?modo=criar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
-              Criar conta
-            </Link>
+            <Link to="/entrar?modo=criar" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">Criar conta</Link>
+            <Link to="/professores" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">Área dos professores</Link>
             <a href="#recursos" className="font-medium text-tinta-suave hover:text-azul dark:text-slate-400">
               Recursos
             </a>

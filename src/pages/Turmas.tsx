@@ -23,6 +23,16 @@ export function anoLabel(ano: number): string {
   return `${ano}º ano`;
 }
 
+export const ANOS_FUND2 = [6, 7, 8, 9];
+const SALAS = ['A', 'B', 'C', 'D'];
+
+export function letraDaTurma(nome: string): string {
+  const m = nome.match(/\b([A-D])\b\s*$/i);
+  if (m) return m[1].toUpperCase();
+  const limpo = nome.trim();
+  return limpo.slice(-1).toUpperCase();
+}
+
 type TurmaSignup = { id: string; name: string; school_year: number; shift: string | null };
 
 export default function Turmas() {
@@ -32,7 +42,7 @@ export default function Turmas() {
     useTurmaPrincipal();
 
   const [todasTurmas, setTodasTurmas] = useState<Turma[] | null>(ehAdmin ? null : []);
-  const [ano, setAno] = useState('');
+  const [anoSel, setAnoSel] = useState(() => { try { return localStorage.getItem('turma-ano-sel') ?? ''; } catch { return ''; } });
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
@@ -58,8 +68,6 @@ export default function Turmas() {
 
   // Aluno: turmas disponíveis para entrar (fora das que já estou).
   const [opcoes, setOpcoes] = useState<TurmaSignup[]>([]);
-  const [anoNovo, setAnoNovo] = useState('');
-  const [turmaNova, setTurmaNova] = useState('');
 
   useEffect(() => {
     if (ehAdmin || !minhasTurmas) return;
@@ -74,14 +82,34 @@ export default function Turmas() {
     };
   }, [ehAdmin, minhasTurmas]);
 
-  const anosOpcoes = useMemo(
-    () => [...new Set(opcoes.map((t) => t.school_year))].sort((a, b) => a - b),
-    [opcoes],
-  );
-  const opcoesDoAno = useMemo(
-    () => opcoes.filter((t) => String(t.school_year) === anoNovo),
-    [opcoes, anoNovo],
-  );
+  // Ano já escolhido fica azulzinho e é lembrado. Se nunca escolheu, usa o ano da principal.
+  useEffect(() => {
+    if (!anoSel && principal) setAnoSel(String(principal.school_year));
+  }, [principal, anoSel]);
+  useEffect(() => {
+    try {
+      if (anoSel) localStorage.setItem('turma-ano-sel', anoSel);
+    } catch { /* ignora */ }
+  }, [anoSel]);
+
+  const salasDoAno = useMemo(() => {
+    if (!anoSel) return [];
+    return SALAS.map((letra) => {
+      const minha = (minhasTurmas ?? []).find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      const opcao = opcoes.find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      return {
+        letra,
+        minha: minha ?? null,
+        opcao: opcao ?? null,
+        nome: minha?.name ?? opcao?.name ?? `${anoSel}º ano ${letra}`,
+        id: minha?.class_id ?? opcao?.id ?? '',
+      };
+    });
+  }, [anoSel, minhasTurmas, opcoes]);
 
   async function trocarPrincipal(turmaId: string, nome: string) {
     setErroAcao(null);
@@ -98,29 +126,28 @@ export default function Turmas() {
     );
   }
 
-  async function entrarOutra(e: React.FormEvent) {
-    e.preventDefault();
+  async function entrarNaSala(id: string, nome: string) {
     setErroAcao(null);
     setMensagem(null);
-    if (!turmaNova) {
-      setErroAcao('Escolha o ano e a sala para entrar.');
-      return;
-    }
-    setSalvandoId('nova');
-    const err = await entrarEAtivar(turmaNova);
+    setSalvandoId(id);
+    const err = await entrarEAtivar(id);
     setSalvandoId(null);
     if (err) {
       setErroAcao(err);
       return;
     }
-    const nome = opcoes.find((t) => t.id === turmaNova)?.name ?? 'a nova turma';
     setMensagem(
       `Você entrou em ${nome} e ela virou sua turma principal. Todo o site agora mostra o conteúdo dela.`,
     );
-    setTurmaNova('');
   }
 
   if (ehAdmin) {
+    const salasAdmin = SALAS.map((letra) => {
+      const turma = (todasTurmas ?? []).find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      return { letra, turma: turma ?? null };
+    });
     return (
       <section aria-labelledby="titulo-turmas" className="space-y-6">
         <div>
@@ -128,34 +155,69 @@ export default function Turmas() {
             Turmas
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Todas as turmas ativas da escola.
+            Primeiro escolha o ano, depois a sala.
           </p>
+        </div>
+        <div>
+          <h2 className="mb-2 font-semibold">1. Escolha o ano</h2>
+          <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+            {ANOS_FUND2.map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAnoSel(String(a))}
+                aria-pressed={anoSel === String(a)}
+                className={`rounded-xl border px-2 py-4 text-center font-bold ${anoSel === String(a) ? 'border-indigo-600 bg-indigo-700 text-white' : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'}`}
+              >
+                <span className="block text-xl">{a}º</span>
+                <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
+              </button>
+            ))}
+          </div>
         </div>
         {todasTurmas === null ? (
           <div className="h-24 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+        ) : !anoSel ? (
+          <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">
+            Toque em 6º, 7º, 8º ou 9º para ver as salas A, B, C e D.
+          </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {(todasTurmas ?? []).map((t) => (
-              <li
-                key={t.id}
-                className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div>
-                  <h2 className="font-semibold">{t.name}</h2>
-                  <p className="text-xs text-slate-500">
-                    {anoLabel(t.school_year)}
-                    {t.shift ? ` · ${TURNO_LABEL[t.shift] ?? t.shift}` : ''}
-                  </p>
-                </div>
-                <Link
-                  to={`/turmas/${t.id}`}
-                  className="mt-auto w-fit rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800"
-                >
-                  Abrir turma
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <h2 className="mb-2 font-semibold">2. Escolha a sala do {anoLabel(Number(anoSel))}</h2>
+            {mensagem && (
+              <div role="status" className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                <p>{mensagem}</p>
+                <p className="mt-2 flex flex-wrap gap-2">
+                  <Link to="/licoes" className="rounded-lg bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800">Ver lições dessa turma</Link>
+                  <Link to="/" className="rounded-lg border border-emerald-600 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900">Ir para o Início</Link>
+                </p>
+              </div>
+            )}
+            {erroAcao && (<p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{erroAcao}</p>)}
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {salasAdmin.map(({ letra, turma }) => {
+                const ehPrincipal = turma && turma.id === principalId;
+                const busy = turma ? salvandoId === turma.id : false;
+                return (
+                <li key={letra} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center ${ehPrincipal ? 'border-indigo-600 bg-indigo-700 text-white shadow-lg' : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'}`}>
+                  <span className="text-3xl font-extrabold">{letra}</span>
+                  <span className={`text-xs ${ehPrincipal ? 'text-indigo-100' : 'text-slate-500'}`}>{turma ? turma.name : 'Sem turma'}</span>
+                  {ehPrincipal ? (
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-indigo-800">✓ Definida — o site já mostra esta sala</span>
+                  ) : turma ? (
+                    <>
+                      <button type="button" disabled={busy} onClick={() => void entrarNaSala(turma.id, turma.name)} className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60">Definir turma</button>
+                      <Link to={`/turmas/${turma.id}`} className="text-xs font-medium text-slate-500 hover:underline">abrir detalhes</Link>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-400">Indisponível</span>
+                  )}
+                </li>
+                );
+              })}
+            </ul>
+            <button type="button" onClick={() => setAnoSel('')} className="mt-3 text-sm font-medium text-slate-500 hover:underline">← Voltar e escolher outro ano</button>
+          </div>
         )}
       </section>
     );
@@ -171,9 +233,6 @@ export default function Turmas() {
     );
   }
 
-  const filtradas = minhasTurmas.filter((t) => !ano || String(t.school_year) === ano);
-  const anos = [...new Set(minhasTurmas.map((t) => t.school_year))].sort((a, b) => a - b);
-
   return (
     <section aria-labelledby="titulo-turmas" className="space-y-6">
       <div>
@@ -181,8 +240,7 @@ export default function Turmas() {
           Turmas
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Escolha a <strong>turma principal</strong>. Todo o site muda para ela: lições, provas,
-          trabalhos, avisos, calendário e horário.
+          Primeiro escolha o ano, depois a sala. A sala principal muda o site todo.
         </p>
       </div>
 
@@ -192,11 +250,10 @@ export default function Turmas() {
           role="status"
         >
           <p className="font-medium text-indigo-900 dark:text-indigo-100">
-            Turma principal: {principal.name} ({anoLabel(principal.school_year)})
+            Turma principal: {principal.name}
           </p>
           <p className="mt-1 text-sm text-indigo-800 dark:text-indigo-200">
-            O site inteiro está mostrando o conteúdo dessa turma. Para trocar, toque em “Usar como
-            principal” em outra turma abaixo.
+            O site inteiro mostra essa turma. Para trocar, escolha outro ano e outra sala abaixo.
           </p>
         </div>
       )}
@@ -212,162 +269,125 @@ export default function Turmas() {
         </p>
       )}
       {mensagem && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-          {mensagem}
-        </p>
-      )}
-
-      {minhasTurmas.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
-          <p className="font-medium">Você ainda não está em nenhuma turma.</p>
-          <p className="mt-1 text-sm text-slate-500">Escolha a sua turma para ver o conteúdo dela.</p>
-          <Link
-            to="/bem-vindo"
-            className="mt-4 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
-          >
-            Escolher minha turma
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-3">
-            <label className="text-sm">
-              <span className="sr-only">Filtrar por ano</span>
-              <select
-                value={ano}
-                onChange={(e) => setAno(e.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
-              >
-                <option value="">Minhas turmas: todos os anos</option>
-                {anos.map((a) => (
-                  <option key={a} value={String(a)}>
-                    {anoLabel(a)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div>
-            <h2 className="mb-2 font-semibold">Minhas turmas</h2>
-            {filtradas.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
-                Nenhuma das suas turmas corresponde ao filtro.
-              </p>
-            ) : (
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {filtradas.map((t) => {
-                  const ehPrincipal = t.class_id === principalId;
-                  return (
-                    <li
-                      key={t.class_id}
-                      className={`flex flex-col gap-3 rounded-xl border bg-white p-4 dark:bg-slate-900 ${
-                        ehPrincipal
-                          ? 'border-indigo-400 ring-1 ring-indigo-300 dark:border-indigo-700'
-                          : 'border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold">{t.name}</h3>
-                          <p className="text-xs text-slate-500">
-                            {anoLabel(t.school_year)}
-                            {t.shift ? ` · ${TURNO_LABEL[t.shift] ?? t.shift}` : ''}
-                          </p>
-                        </div>
-                        {ehPrincipal && (
-                          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200">
-                            Principal — o site mostra esta
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-auto flex flex-wrap gap-2">
-                        <Link
-                          to={`/turmas/${t.class_id}`}
-                          className="rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800"
-                        >
-                          Abrir turma
-                        </Link>
-                        {!ehPrincipal && (
-                          <button
-                            type="button"
-                            disabled={salvandoId === t.class_id}
-                            onClick={() => void trocarPrincipal(t.class_id, t.name)}
-                            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800"
-                          >
-                            {salvandoId === t.class_id ? 'Trocando…' : 'Usar como principal'}
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
-
-      {minhasTurmas.length > 0 && (
-        <form
-          onSubmit={entrarOutra}
-          aria-label="Entrar em outra turma"
-          className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <h2 className="font-semibold">Entrar em outra turma</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Entrou numa turma nova? Escolha aqui. Ela vira sua principal e o site todo muda para ela.
+        <div role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+          <p>{mensagem}</p>
+          <p className="mt-2 flex flex-wrap gap-2">
+            <Link to="/licoes" className="rounded-lg bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800">Ver lições dessa turma</Link>
+            <Link to="/" className="rounded-lg border border-emerald-600 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900">Ir para o Início</Link>
           </p>
-          {opcoes.length === 0 ? (
-            <p className="text-sm text-slate-500">Você já está em todas as turmas disponíveis.</p>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm font-medium">
-                Ano
-                <select
-                  value={anoNovo}
-                  onChange={(e) => {
-                    setAnoNovo(e.target.value);
-                    setTurmaNova('');
-                  }}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+        </div>
+      )}
+
+      {/* PASSO 1 — só os 4 anos. O ano já escolhido fica azulzinho. */}
+      <div>
+        <h2 className="mb-2 font-semibold">1. Escolha o ano</h2>
+        <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+          {ANOS_FUND2.map((a) => {
+            const selecionado = anoSel === String(a);
+            const ehMeuAno = principal ? String(principal.school_year) === String(a) : false;
+            return (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAnoSel(String(a))}
+                aria-pressed={selecionado}
+                title={ehMeuAno ? 'Seu ano — toque para ver sua sala' : anoLabel(a)}
+                className={`min-h-20 rounded-xl border px-2 py-4 text-center font-bold active:scale-[0.98] ${
+                  selecionado
+                    ? 'border-indigo-600 bg-indigo-700 text-white shadow'
+                    : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
+                }`}
+              >
+                <span className="block text-xl">{a}º</span>
+                <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
+                {ehMeuAno && (
+                  <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${selecionado ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200'}`}>
+                    ● seu ano
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {principal && anoSel === String(principal.school_year) && (
+          <p className="mt-2 text-sm text-indigo-700 dark:text-indigo-300">Esse ano azulzinho é o seu — abaixo está a sua sala marcada como Principal.</p>
+        )}
+      </div>
+
+      {/* PASSO 2 — só aparece depois do ano */}
+      {!anoSel ? (
+        <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">
+          Toque em 6º, 7º, 8º ou 9º para ver as salas A, B, C e D.
+        </p>
+      ) : (
+        <div>
+          <h2 className="mb-2 font-semibold">2. Escolha a sala do {anoLabel(Number(anoSel))}</h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {salasDoAno.map((s) => {
+              const ehPrincipal = s.minha && s.minha.class_id === principalId;
+              const estouDentro = !!s.minha;
+              const busy = salvandoId === s.id;
+              return (
+                <li
+                  key={s.letra}
+                  className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center ${
+                    ehPrincipal
+                      ? 'border-indigo-600 bg-indigo-700 text-white shadow-lg ring-2 ring-indigo-300 dark:border-indigo-400 dark:bg-indigo-800'
+                      : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
+                  }`}
                 >
-                  <option value="">Selecione o ano</option>
-                  {anosOpcoes.map((a) => (
-                    <option key={a} value={String(a)}>
-                      {anoLabel(a)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm font-medium">
-                Sala
-                <select
-                  value={turmaNova}
-                  disabled={!anoNovo}
-                  onChange={(e) => setTurmaNova(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
-                >
-                  <option value="">{anoNovo ? 'Selecione a sala' : 'Escolha o ano primeiro'}</option>
-                  {opcoesDoAno.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          )}
-          {opcoes.length > 0 && (
-            <button
-              type="submit"
-              disabled={salvandoId === 'nova'}
-              className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-60"
-            >
-              {salvandoId === 'nova' ? 'Entrando…' : 'Entrar e usar como principal'}
-            </button>
-          )}
-        </form>
+                  <span className="text-3xl font-extrabold">{s.letra}</span>
+                  <span className="text-xs text-slate-500">{s.nome}</span>
+                  {ehPrincipal ? (
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-indigo-800">
+                      ● Sua sala — Principal
+                    </span>
+                  ) : estouDentro ? (
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium dark:bg-slate-700">
+                      Minha turma
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800">
+                      Toque para entrar
+                    </span>
+                  )}
+                  {ehPrincipal ? (
+                    <span className="mt-1 w-full rounded-lg bg-white/20 px-3 py-1.5 text-center text-sm font-semibold text-white">
+                      ✓ Definida — o site já mostra esta sala
+                    </span>
+                  ) : estouDentro && s.minha ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void trocarPrincipal(s.minha!.class_id, s.nome)}
+                      className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60"
+                    >
+                      {busy ? 'Definindo…' : 'Definir turma'}
+                    </button>
+                  ) : s.opcao ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void entrarNaSala(s.opcao!.id, s.nome)}
+                      className="mt-1 min-h-12 w-full rounded-xl bg-indigo-700 px-3 py-3 text-[15px] font-bold text-white hover:bg-indigo-800 active:scale-[0.99] disabled:opacity-60"
+                    >
+                      {busy ? 'Definindo…' : 'Definir turma'}
+                    </button>
+                  ) : (
+                    <span className="text-xs text-slate-400">Indisponível</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <button
+            type="button"
+            onClick={() => setAnoSel('')}
+            className="mt-3 text-sm font-medium text-slate-500 hover:underline"
+          >
+            ← Voltar e escolher outro ano
+          </button>
+        </div>
       )}
     </section>
   );

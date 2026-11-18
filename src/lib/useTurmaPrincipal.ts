@@ -61,6 +61,16 @@ export function useTurmaPrincipal() {
     void recarregar();
   }, [recarregar]);
 
+  // Quando define em /turmas, as outras telas (Início, Lições...) atualizam na hora, sem precisar recarregar.
+  useEffect(() => {
+    const aoMudar = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id) setPrincipalId(id);
+    };
+    window.addEventListener('turma-principal-mudou', aoMudar);
+    return () => window.removeEventListener('turma-principal-mudou', aoMudar);
+  }, []);
+
   async function definirPrincipal(turmaId: string): Promise<string | null> {
     if (!userId) return 'Sessão expirada. Entre novamente.';
     const { error } = await supabase

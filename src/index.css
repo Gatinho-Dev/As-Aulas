@@ -94,8 +94,91 @@ html {
   }
 }
 
+/* Deslize suave: troca de filtro/aba e entrada de cartões (ex.: área dos professores). */
+@keyframes deslizar-painel {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes deslizar-item {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes deslizar-modal {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.slide-painel {
+  animation: deslizar-painel 0.35s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+}
+
+.slide-item {
+  animation: deslizar-item 0.3s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+  animation-delay: var(--atraso, 0ms);
+}
+
+.slide-modal {
+  animation: deslizar-modal 0.32s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-painel,
+  .slide-item,
+  .slide-modal {
+    animation: none;
+  }
+}
+
 body {
   @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overflow-x: hidden;
+}
+
+/* Evita zoom automático do iOS ao focar campos e melhora o toque. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+  }
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* Rolagem suave do menu "Mais" no celular. */
+#menu-mais {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 :focus-visible {
