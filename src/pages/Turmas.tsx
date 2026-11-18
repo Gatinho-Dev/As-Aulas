@@ -24,6 +24,7 @@ export function anoLabel(ano: number): string {
 }
 
 export const ANOS_FUND2 = [6, 7, 8, 9];
+const SALAS = ['A', 'B', 'C', 'D'];
 
 export function letraDaTurma(nome: string): string {
   const m = nome.match(/\b([A-D])\b\s*$/i);
@@ -41,7 +42,7 @@ export default function Turmas() {
     useTurmaPrincipal();
 
   const [todasTurmas, setTodasTurmas] = useState<Turma[] | null>(ehAdmin ? null : []);
-  const [ano, setAno] = useState('');
+  const [anoSel, setAnoSel] = useState('');
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
@@ -67,8 +68,6 @@ export default function Turmas() {
 
   // Aluno: turmas disponíveis para entrar (fora das que já estou).
   const [opcoes, setOpcoes] = useState<TurmaSignup[]>([]);
-  const [anoNovo, setAnoNovo] = useState('');
-  const [turmaNova, setTurmaNova] = useState('');
 
   useEffect(() => {
     if (ehAdmin || !minhasTurmas) return;
@@ -83,19 +82,29 @@ export default function Turmas() {
     };
   }, [ehAdmin, minhasTurmas]);
 
-  const opcoesDoAno = useMemo(
-    () => opcoes.filter((t) => String(t.school_year) === anoNovo),
-    [opcoes, anoNovo],
-  );
-  const mapaLetraId = useMemo(() => {
-    const mapa = new Map<string, string>();
-    for (const t of opcoesDoAno) mapa.set(letraDaTurma(t.name), t.id);
-    return mapa;
-  }, [opcoesDoAno]);
-  const letraSelecionada = useMemo(() => {
-    const achou = opcoesDoAno.find((t) => t.id === turmaNova);
-    return achou ? letraDaTurma(achou.name) : '';
-  }, [opcoesDoAno, turmaNova]);
+  // Quando carrega, já deixa selecionado o ano da turma principal.
+  useEffect(() => {
+    if (!anoSel && principal) setAnoSel(String(principal.school_year));
+  }, [principal, anoSel]);
+
+  const salasDoAno = useMemo(() => {
+    if (!anoSel) return [];
+    return SALAS.map((letra) => {
+      const minha = (minhasTurmas ?? []).find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      const opcao = opcoes.find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      return {
+        letra,
+        minha: minha ?? null,
+        opcao: opcao ?? null,
+        nome: minha?.name ?? opcao?.name ?? `${anoSel}º ano ${letra}`,
+        id: minha?.class_id ?? opcao?.id ?? '',
+      };
+    });
+  }, [anoSel, minhasTurmas, opcoes]);
 
   async function trocarPrincipal(turmaId: string, nome: string) {
     setErroAcao(null);
@@ -112,26 +121,19 @@ export default function Turmas() {
     );
   }
 
-  async function entrarOutra(e: React.FormEvent) {
-    e.preventDefault();
+  async function entrarNaSala(id: string, nome: string) {
     setErroAcao(null);
     setMensagem(null);
-    if (!turmaNova) {
-      setErroAcao('Escolha o ano e a sala para entrar.');
-      return;
-    }
-    setSalvandoId('nova');
-    const err = await entrarEAtivar(turmaNova);
+    setSalvandoId(id);
+    const err = await entrarEAtivar(id);
     setSalvandoId(null);
     if (err) {
       setErroAcao(err);
       return;
     }
-    const nome = opcoes.find((t) => t.id === turmaNova)?.name ?? 'a nova turma';
     setMensagem(
       `Você entrou em ${nome} e ela virou sua turma principal. Todo o site agora mostra o conteúdo dela.`,
     );
-    setTurmaNova('');
   }
 
   if (ehAdmin) {
@@ -185,9 +187,6 @@ export default function Turmas() {
     );
   }
 
-  const filtradas = minhasTurmas.filter((t) => !ano || String(t.school_year) === ano);
-  const anos = [...new Set(minhasTurmas.map((t) => t.school_year))].sort((a, b) => a - b);
-
   return (
     <section aria-labelledby="titulo-turmas" className="space-y-6">
       <div>
@@ -195,8 +194,7 @@ export default function Turmas() {
           Turmas
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Escolha a <strong>turma principal</strong>. Todo o site muda para ela: lições, provas,
-          trabalhos, avisos, calendário e horário.
+          Primeiro escolha o ano, depois a sala. A sala principal muda o site todo.
         </p>
       </div>
 
@@ -206,11 +204,10 @@ export default function Turmas() {
           role="status"
         >
           <p className="font-medium text-indigo-900 dark:text-indigo-100">
-            Turma principal: {principal.name} ({anoLabel(principal.school_year)})
+            Turma principal: {principal.name}
           </p>
           <p className="mt-1 text-sm text-indigo-800 dark:text-indigo-200">
-            O site inteiro está mostrando o conteúdo dessa turma. Para trocar, toque em “Usar como
-            principal” em outra turma abaixo.
+            O site inteiro mostra essa turma. Para trocar, escolha outro ano e outra sala abaixo.
           </p>
         </div>
       )}
@@ -231,183 +228,109 @@ export default function Turmas() {
         </p>
       )}
 
-      {minhasTurmas.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-700">
-          <p className="font-medium">Você ainda não está em nenhuma turma.</p>
-          <p className="mt-1 text-sm text-slate-500">Escolha a sua turma para ver o conteúdo dela.</p>
-          <Link
-            to="/bem-vindo"
-            className="mt-4 inline-block rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
-          >
-            Escolher minha turma
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar minhas turmas por ano">
+      {/* PASSO 1 — só os 4 anos */}
+      <div>
+        <h2 className="mb-2 font-semibold">1. Escolha o ano</h2>
+        <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+          {ANOS_FUND2.map((a) => (
             <button
+              key={a}
               type="button"
-              onClick={() => setAno('')}
-              aria-pressed={ano === ''}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium ${ano === '' ? 'bg-indigo-700 text-white' : 'border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}`}
+              onClick={() => setAnoSel(String(a))}
+              aria-pressed={anoSel === String(a)}
+              className={`rounded-xl border px-2 py-4 text-center font-bold ${
+                anoSel === String(a)
+                  ? 'border-indigo-600 bg-indigo-700 text-white'
+                  : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
+              }`}
             >
-              Todas
+              <span className="block text-xl">{a}º</span>
+              <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
             </button>
-            {ANOS_FUND2.map((a) => {
-              const tenho = anos.includes(a);
+          ))}
+        </div>
+      </div>
+
+      {/* PASSO 2 — só aparece depois do ano */}
+      {!anoSel ? (
+        <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">
+          Toque em 6º, 7º, 8º ou 9º para ver as salas A, B, C e D.
+        </p>
+      ) : (
+        <div>
+          <h2 className="mb-2 font-semibold">2. Escolha a sala do {anoLabel(Number(anoSel))}</h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {salasDoAno.map((s) => {
+              const ehPrincipal = s.minha && s.minha.class_id === principalId;
+              const estouDentro = !!s.minha;
+              const busy = salvandoId === s.id;
               return (
-                <button
-                  key={a}
-                  type="button"
-                  disabled={!tenho}
-                  title={tenho ? anoLabel(a) : `${anoLabel(a)} (você não está em nenhuma)`}
-                  onClick={() => setAno(String(a))}
-                  aria-pressed={ano === String(a)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium disabled:opacity-40 ${ano === String(a) ? 'bg-indigo-700 text-white' : 'border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}`}
+                <li
+                  key={s.letra}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center ${
+                    ehPrincipal
+                      ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-300 dark:border-indigo-600 dark:bg-indigo-950'
+                      : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
+                  }`}
                 >
-                  {a}º
-                </button>
+                  <span className="text-3xl font-extrabold">{s.letra}</span>
+                  <span className="text-xs text-slate-500">{s.nome}</span>
+                  {ehPrincipal ? (
+                    <span className="rounded-full bg-indigo-700 px-2 py-0.5 text-xs font-semibold text-white">
+                      Principal
+                    </span>
+                  ) : estouDentro ? (
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium dark:bg-slate-700">
+                      Minha turma
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800">
+                      Toque para entrar
+                    </span>
+                  )}
+                  {estouDentro && s.minha ? (
+                    <div className="mt-1 flex w-full flex-col gap-2">
+                      <Link
+                        to={`/turmas/${s.minha.class_id}`}
+                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 dark:bg-slate-100 dark:text-slate-900"
+                      >
+                        Abrir
+                      </Link>
+                      {!ehPrincipal && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void trocarPrincipal(s.minha!.class_id, s.nome)}
+                          className="rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-60"
+                        >
+                          {busy ? 'Trocando…' : 'Usar como principal'}
+                        </button>
+                      )}
+                    </div>
+                  ) : s.opcao ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void entrarNaSala(s.opcao!.id, s.nome)}
+                      className="mt-1 w-full rounded-lg border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-60 dark:text-indigo-300 dark:hover:bg-indigo-950"
+                    >
+                      {busy ? 'Entrando…' : 'Entrar'}
+                    </button>
+                  ) : (
+                    <span className="text-xs text-slate-400">Indisponível</span>
+                  )}
+                </li>
               );
             })}
-          </div>
-
-          <div>
-            <h2 className="mb-2 font-semibold">Minhas turmas</h2>
-            {filtradas.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
-                Nenhuma das suas turmas corresponde ao filtro.
-              </p>
-            ) : (
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {filtradas.map((t) => {
-                  const ehPrincipal = t.class_id === principalId;
-                  return (
-                    <li
-                      key={t.class_id}
-                      className={`flex flex-col gap-3 rounded-xl border bg-white p-4 dark:bg-slate-900 ${
-                        ehPrincipal
-                          ? 'border-indigo-400 ring-1 ring-indigo-300 dark:border-indigo-700'
-                          : 'border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold">{t.name}</h3>
-                          <p className="text-xs text-slate-500">
-                            {anoLabel(t.school_year)}
-                            {t.shift ? ` · ${TURNO_LABEL[t.shift] ?? t.shift}` : ''}
-                          </p>
-                        </div>
-                        {ehPrincipal && (
-                          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200">
-                            Principal — o site mostra esta
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-auto flex flex-wrap gap-2">
-                        <Link
-                          to={`/turmas/${t.class_id}`}
-                          className="rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800"
-                        >
-                          Abrir turma
-                        </Link>
-                        {!ehPrincipal && (
-                          <button
-                            type="button"
-                            disabled={salvandoId === t.class_id}
-                            onClick={() => void trocarPrincipal(t.class_id, t.name)}
-                            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800"
-                          >
-                            {salvandoId === t.class_id ? 'Trocando…' : 'Usar como principal'}
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
-
-      {minhasTurmas.length > 0 && (
-        <form
-          onSubmit={entrarOutra}
-          aria-label="Entrar em outra turma"
-          className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <h2 className="font-semibold">Entrar em outra turma</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Entrou numa turma nova? Escolha aqui. Ela vira sua principal e o site todo muda para ela.
-          </p>
-          {opcoes.length === 0 ? (
-            <p className="text-sm text-slate-500">Você já está em todas as turmas disponíveis.</p>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium">1. Escolha o ano</p>
-                <div className="mt-2 grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
-                  {ANOS_FUND2.map((a) => (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => {
-                        setAnoNovo(String(a));
-                        setTurmaNova('');
-                      }}
-                      aria-pressed={anoNovo === String(a)}
-                      className={`rounded-xl border px-2 py-3 text-center font-semibold ${anoNovo === String(a) ? 'border-indigo-600 bg-indigo-700 text-white' : 'border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800'}`}
-                    >
-                      {a}º
-                      <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium">2. Escolha a sala</p>
-                {!anoNovo ? (
-                  <p className="mt-2 text-sm text-slate-500">Escolha o ano primeiro para ver as salas A, B, C e D.</p>
-                ) : (
-                  <div className="mt-2 grid grid-cols-4 gap-2" role="group" aria-label={`Salas do ${anoLabel(Number(anoNovo))}`}>
-                    {['A', 'B', 'C', 'D'].map((letra) => {
-                      const id = mapaLetraId.get(letra);
-                      const ativa = letraSelecionada === letra;
-                      return (
-                        <button
-                          key={letra}
-                          type="button"
-                          disabled={!id}
-                          title={id ? `${anoNovo}º ${letra}` : `Sala ${letra} indisponível`}
-                          onClick={() => id && setTurmaNova(id)}
-                          aria-pressed={ativa}
-                          className={`rounded-xl border px-2 py-3 text-center text-lg font-bold ${ativa ? 'border-indigo-600 bg-indigo-700 text-white' : 'border-slate-300 hover:bg-slate-100 disabled:opacity-40 dark:border-slate-700 dark:hover:bg-slate-800'}`}
-                        >
-                          {letra}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {anoNovo && turmaNova && (
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                    Selecionado: <strong>{opcoesDoAno.find((t) => t.id === turmaNova)?.name}</strong>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-          {opcoes.length > 0 && (
-            <button
-              type="submit"
-              disabled={salvandoId === 'nova'}
-              className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-60"
-            >
-              {salvandoId === 'nova' ? 'Entrando…' : 'Entrar e usar como principal'}
-            </button>
-          )}
-        </form>
+          </ul>
+          <button
+            type="button"
+            onClick={() => setAnoSel('')}
+            className="mt-3 text-sm font-medium text-slate-500 hover:underline"
+          >
+            ← Voltar e escolher outro ano
+          </button>
+        </div>
       )}
     </section>
   );
