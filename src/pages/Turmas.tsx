@@ -137,6 +137,12 @@ export default function Turmas() {
   }
 
   if (ehAdmin) {
+    const salasAdmin = SALAS.map((letra) => {
+      const turma = (todasTurmas ?? []).find(
+        (t) => String(t.school_year) === anoSel && letraDaTurma(t.name) === letra,
+      );
+      return { letra, turma: turma ?? null };
+    });
     return (
       <section aria-labelledby="titulo-turmas" className="space-y-6">
         <div>
@@ -144,34 +150,50 @@ export default function Turmas() {
             Turmas
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Todas as turmas ativas da escola.
+            Primeiro escolha o ano, depois a sala.
           </p>
+        </div>
+        <div>
+          <h2 className="mb-2 font-semibold">1. Escolha o ano</h2>
+          <div className="grid grid-cols-4 gap-2" role="group" aria-label="Escolha o ano">
+            {ANOS_FUND2.map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAnoSel(String(a))}
+                aria-pressed={anoSel === String(a)}
+                className={`rounded-xl border px-2 py-4 text-center font-bold ${anoSel === String(a) ? 'border-indigo-600 bg-indigo-700 text-white' : 'border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'}`}
+              >
+                <span className="block text-xl">{a}º</span>
+                <span className="block text-xs font-normal opacity-80">{anoLabel(a)}</span>
+              </button>
+            ))}
+          </div>
         </div>
         {todasTurmas === null ? (
           <div className="h-24 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+        ) : !anoSel ? (
+          <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">
+            Toque em 6º, 7º, 8º ou 9º para ver as salas A, B, C e D.
+          </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {(todasTurmas ?? []).map((t) => (
-              <li
-                key={t.id}
-                className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div>
-                  <h2 className="font-semibold">{t.name}</h2>
-                  <p className="text-xs text-slate-500">
-                    {anoLabel(t.school_year)}
-                    {t.shift ? ` · ${TURNO_LABEL[t.shift] ?? t.shift}` : ''}
-                  </p>
-                </div>
-                <Link
-                  to={`/turmas/${t.id}`}
-                  className="mt-auto w-fit rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800"
-                >
-                  Abrir turma
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <h2 className="mb-2 font-semibold">2. Escolha a sala do {anoLabel(Number(anoSel))}</h2>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {salasAdmin.map(({ letra, turma }) => (
+                <li key={letra} className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
+                  <span className="text-3xl font-extrabold">{letra}</span>
+                  <span className="text-xs text-slate-500">{turma ? `${turma.name}${turma.shift ? ` · ${TURNO_LABEL[turma.shift] ?? turma.shift}` : ''}` : 'Sem turma'}</span>
+                  {turma ? (
+                    <Link to={`/turmas/${turma.id}`} className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800">Abrir turma</Link>
+                  ) : (
+                    <span className="text-xs text-slate-400">Indisponível</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <button type="button" onClick={() => setAnoSel('')} className="mt-3 text-sm font-medium text-slate-500 hover:underline">← Voltar e escolher outro ano</button>
+          </div>
         )}
       </section>
     );
