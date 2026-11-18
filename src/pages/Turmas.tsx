@@ -250,9 +250,13 @@ export default function Turmas() {
         </p>
       )}
       {mensagem && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-          {mensagem}
-        </p>
+        <div role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+          <p>{mensagem}</p>
+          <p className="mt-2 flex flex-wrap gap-2">
+            <Link to="/licoes" className="rounded-lg bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800">Ver lições dessa turma</Link>
+            <Link to="/" className="rounded-lg border border-emerald-600 px-3 py-1.5 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900">Ir para o Início</Link>
+          </p>
+        </div>
       )}
 
       {/* PASSO 1 — só os 4 anos. O ano já escolhido fica azulzinho. */}
@@ -328,33 +332,27 @@ export default function Turmas() {
                       Toque para entrar
                     </span>
                   )}
-                  {estouDentro && s.minha ? (
-                    <div className="mt-1 flex w-full flex-col gap-2">
-                      <Link
-                        to={`/turmas/${s.minha.class_id}`}
-                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 dark:bg-slate-100 dark:text-slate-900"
-                      >
-                        Abrir
-                      </Link>
-                      {!ehPrincipal && (
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void trocarPrincipal(s.minha!.class_id, s.nome)}
-                          className="rounded-lg bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-60"
-                        >
-                          {busy ? 'Trocando…' : 'Usar como principal'}
-                        </button>
-                      )}
-                    </div>
+                  {ehPrincipal ? (
+                    <span className="mt-1 w-full rounded-lg bg-white/20 px-3 py-1.5 text-center text-sm font-semibold text-white">
+                      ✓ Definida — o site já mostra esta sala
+                    </span>
+                  ) : estouDentro && s.minha ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void trocarPrincipal(s.minha!.class_id, s.nome)}
+                      className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60"
+                    >
+                      {busy ? 'Definindo…' : 'Definir turma'}
+                    </button>
                   ) : s.opcao ? (
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => void entrarNaSala(s.opcao!.id, s.nome)}
-                      className="mt-1 w-full rounded-lg border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-60 dark:text-indigo-300 dark:hover:bg-indigo-950"
+                      className="mt-1 w-full rounded-lg bg-indigo-700 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-800 disabled:opacity-60"
                     >
-                      {busy ? 'Entrando…' : 'Entrar'}
+                      {busy ? 'Definindo…' : 'Definir turma'}
                     </button>
                   ) : (
                     <span className="text-xs text-slate-400">Indisponível</span>
